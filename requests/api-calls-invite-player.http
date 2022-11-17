@@ -1,0 +1,29 @@
+### Create game
+
+POST http://localhost:8080/games
+Content-Type: application/json
+
+{
+  "playerId": "{{player2}}",
+  "invitePlayerId": "{{player1}}",
+  "minutes": 5,
+  "incrementSeconds": 3,
+  "pieceColor": "WHITE"
+}
+
+> {%
+    client.global.set("game_id", response.body.gameId);
+%}
+
+### Accept invitation
+
+POST http://localhost:8080/games/{{game_id}}/accept-invite
+Content-Type: application/json
+
+{
+  "playerId": "{{player1}}"
+}
+
+### Get game
+
+GET http://localhost:8080/games/{{game_id}}

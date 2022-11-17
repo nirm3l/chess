@@ -1,0 +1,90 @@
+version: '3.8'
+services:
+  gateway:
+    container_name: gateway
+    build:
+      context: gateway
+      dockerfile: Dockerfile
+    image: nirmelregistry.azurecr.io/api-workshop/gateway:latest
+    ports:
+      - 8080:8080
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    platform: linux/amd64
+  admin:
+    container_name: admin
+    build:
+      context: admin
+      dockerfile: Dockerfile
+    image: nirmelregistry.azurecr.io/api-workshop/admin:latest
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    platform: linux/amd64
+    ports:
+      - 8081:8080
+  spring-service:
+    container_name: spring-service
+    build:
+      context: spring-service
+      dockerfile: Dockerfile
+    image: nirmelregistry.azurecr.io/api-workshop/spring-service:latest
+    environment:
+      - JAVA_OPTS=-Xmx512m -Xms128m
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    platform: linux/amd64
+    ports:
+      - 8082:8080
+  fast-api-service:
+    container_name: fast-api-service
+    build:
+      context: fast-api-service
+      dockerfile: Dockerfile
+    image: nirmelregistry.azurecr.io/api-workshop/fast-api-service:latest
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    platform: linux/amd64
+    ports:
+      - 8083:8080
+  node-service:
+    container_name: node-service
+    build:
+      context: node-service
+      dockerfile: Dockerfile
+    image: nirmelregistry.azurecr.io/api-workshop/node-service:latest
+    environment:
+      - NODE_ENV=production
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    platform: linux/amd64
+    ports:
+      - 8084:8080
+  core-service:
+    container_name: core-service
+    build:
+      context: core-service
+      dockerfile: Dockerfile
+    image: nirmelregistry.azurecr.io/api-workshop/core-service:latest
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    platform: linux/amd64
+    ports:
+      - 8085:8080

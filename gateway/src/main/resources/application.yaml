@@ -1,0 +1,31 @@
+management.endpoints.web.exposure.include: "*"
+
+spring:
+  application:
+    name: Gateway
+  cloud:
+    gateway:
+      routes:
+        - id: board
+          predicates:
+            - Path=/boards/**
+          uri: http://localhost:8083
+        - id: game
+          predicates:
+            - Path=/games/**
+          uri: http://localhost:8084
+        - id: player
+          predicates:
+            - Path=/players/**
+          uri: http://localhost:8081
+        - id: frontend
+          predicates:
+            - Path=/**
+          uri: http://localhost:3000
+#  security:
+#    oauth2:
+#      client:
+#        registration:
+#          google:
+#            client-id: 207882018572-o8gp3dejeo8vahnjksdha4k5v1sqot17.apps.googleusercontent.com
+#            client-secret: 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

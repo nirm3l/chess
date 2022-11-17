@@ -1,0 +1,30 @@
+### Create game
+
+POST http://localhost:8080/games
+Content-Type: application/json
+
+{
+  "playerId": "{{player2}}",
+  "minutes": 5,
+  "incrementSeconds": 3,
+  "pieceColor": "WHITE"
+}
+
+> {%
+    client.global.set("game_id", response.body.gameId);
+%}
+
+### Quick pair
+
+POST http://localhost:8080/games/quick-pair
+Content-Type: application/json
+
+{
+  "playerId": "{{player1}}",
+  "minutes": 5,
+  "incrementSeconds": 3
+}
+
+### Get game
+
+GET http://localhost:8080/games/{{game_id}}

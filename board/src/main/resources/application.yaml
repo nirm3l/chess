@@ -1,0 +1,27 @@
+management.endpoints.web.exposure.include: "*"
+
+spring:
+  application:
+    name: Game Service
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+    default-property-inclusion: non_null
+
+axon:
+  serializer:
+    general: default
+    events: jackson
+    messages: jackson
+
+uci:
+  host: localhost
+  port: 23249
+
+#axon:
+#  axonserver:
+#    keep-alive-time: '0'
+#    ssl-enabled: 'true'
+#    context: nirmel-test@nirmel-test
+#    servers: axonserver.cloud.axoniq.io:443
+#    token: eg0pZFbnozpeQRXvv4JL
