@@ -42,3 +42,7 @@ body {
   border-radius: 5px;
   background-color: #0f0f0f;
 }
+
+.san-viewer .move {
+  text-decoration: none;
+}

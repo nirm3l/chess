@@ -1,4 +1,4 @@
-package is.symphony.chess.game;
+package is.symphony.chess.engine;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

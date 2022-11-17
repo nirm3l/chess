@@ -11,6 +11,7 @@ import org.axonframework.modelling.saga.SagaLifecycle;
 import org.axonframework.modelling.saga.StartSaga;
 import org.axonframework.spring.stereotype.Saga;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.UUID;
 
 @Saga
@@ -20,9 +21,13 @@ public class PlayerEngineSaga {
 
     public static final String ENGINE_ID_ASSOCIATION = "engineId";
 
+    public static final String RETRY_ASSOCIATION = "retry";
+
     private transient CommandGateway commandGateway;
 
     private UUID playerId;
+
+    private UUID engineId;
 
     @Autowired
     public void setCommandGateway(final CommandGateway commandGateway) {
@@ -38,11 +43,19 @@ public class PlayerEngineSaga {
             SagaLifecycle.end();
         }
 
-        final UUID engineId = UUID.randomUUID();
+        if (engineId == null) {
+            engineId = UUID.randomUUID();
+            SagaLifecycle.associateWith(ENGINE_ID_ASSOCIATION, engineId.toString());
+        }
 
-        SagaLifecycle.associateWith(ENGINE_ID_ASSOCIATION, engineId.toString());
+        try {
+            commandGateway.sendAndWait(new RegisterEngineCommand(engineId, playerRegisteredEvent.getName(), playerRegisteredEvent.getLevel()));
+        }
+        catch (Exception e) {
+            SagaLifecycle.associateWith(RETRY_ASSOCIATION, "true");
 
-        commandGateway.sendAndWait(new RegisterEngineCommand(engineId, playerRegisteredEvent.getName(), playerRegisteredEvent.getLevel()));
+            throw e;
+        }
     }
 
     @SagaEventHandler(associationProperty = ENGINE_ID_ASSOCIATION)
@@ -55,5 +68,13 @@ public class PlayerEngineSaga {
     @SagaEventHandler(associationProperty = PLAYER_ID_ASSOCIATION)
     public void handle(PlayerEngineAssociatedEvent playerPairingCanceledEvent) {
         SagaLifecycle.end();
+    }
+
+    public UUID getPlayerId() {
+        return playerId;
+    }
+
+    public void retrySuccess() {
+        SagaLifecycle.removeAssociationWith(RETRY_ASSOCIATION, "true");
     }
 }

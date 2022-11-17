@@ -2,12 +2,12 @@
 
 POST http://localhost:8080/games
 Content-Type: application/json
+User: {{player1}}
 
 {
-  "playerId": "{{player2}}",
-  "invitePlayerId": "{{player1}}",
+  "invitePlayerId": "{{player2}}",
   "minutes": 5,
-  "incrementSeconds": 3,
+  "incrementSeconds": 0,
   "pieceColor": "WHITE"
 }
 
@@ -19,11 +19,4 @@ Content-Type: application/json
 
 POST http://localhost:8080/games/{{game_id}}/accept-invite
 Content-Type: application/json
-
-{
-  "playerId": "{{player1}}"
-}
-
-### Get game
-
-GET http://localhost:8080/games/{{game_id}}
+User: {{player2}}

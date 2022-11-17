@@ -55,8 +55,8 @@ public class BoardSaga {
     }
 
     @SagaEventHandler(associationProperty = BOARD_ID_ASSOCIATION)
-    public void handle(MovePlayedEvent gameReadyEvent) {
-        final BoardMove boardMove = gameReadyEvent.getBoardMove();
+    public void handle(MovePlayedEvent movePlayedEvent) {
+        final BoardMove boardMove = movePlayedEvent.getBoardMove();
 
         if (cancelBoardToken != null && boardMove.getPlayerColor() == PlayerColor.BLACK) {
             scheduler.cancelSchedule(cancelBoardToken);

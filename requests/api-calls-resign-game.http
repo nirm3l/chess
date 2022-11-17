@@ -2,9 +2,10 @@
 
 POST http://localhost:8080/games
 Content-Type: application/json
-User: {{player2}}
+User: {{player1}}
 
 {
+  "invitePlayerId": "{{player1}}",
   "minutes": 5,
   "incrementSeconds": 3,
   "pieceColor": "WHITE"
@@ -14,17 +15,22 @@ User: {{player2}}
     client.global.set("game_id", response.body.gameId);
 %}
 
-### Quick pair
+### Accept invitation
 
-POST http://localhost:8080/games/quick-pair
+POST http://localhost:8080/games/{{game_id}}/accept-invite
+Content-Type: application/json
+User: {{player2}}
+
+### Play 1 move
+
+POST http://localhost:8080/games/{{game_id}}/play
 Content-Type: application/json
 User: {{player1}}
 
-{
-  "minutes": 5,
-  "incrementSeconds": 3
-}
+{ "move": "f3" }
 
-### Get game
+### Black resign game
 
-GET http://localhost:8080/games/{{game_id}}
+POST http://localhost:8080/games/{{game_id}}/resign
+Content-Type: application/json
+User: {{player2}}

@@ -1,90 +1,22 @@
 version: '3.8'
 services:
-  gateway:
-    container_name: gateway
-    build:
-      context: gateway
-      dockerfile: Dockerfile
-    image: nirmelregistry.azurecr.io/api-workshop/gateway:latest
+  axon:
+    container_name: axon
+    image: axoniq/axonserver:latest-jdk-17-dev
     ports:
-      - 8080:8080
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    platform: linux/amd64
-  admin:
-    container_name: admin
-    build:
-      context: admin
-      dockerfile: Dockerfile
-    image: nirmelregistry.azurecr.io/api-workshop/admin:latest
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    platform: linux/amd64
+      - 8024:8024
+      - 8124:8124
+  mongo:
+    container_name: mongo
+    image: mongo:6.0
     ports:
-      - 8081:8080
-  spring-service:
-    container_name: spring-service
+      - 27017:27017
+  stockfish:
+    container_name: stockfish
     build:
-      context: spring-service
+      context: stockfish
       dockerfile: Dockerfile
-    image: nirmelregistry.azurecr.io/api-workshop/spring-service:latest
-    environment:
-      - JAVA_OPTS=-Xmx512m -Xms128m
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    platform: linux/amd64
+    image: latest-stockfish
+    platform: linux/arm64
     ports:
-      - 8082:8080
-  fast-api-service:
-    container_name: fast-api-service
-    build:
-      context: fast-api-service
-      dockerfile: Dockerfile
-    image: nirmelregistry.azurecr.io/api-workshop/fast-api-service:latest
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    platform: linux/amd64
-    ports:
-      - 8083:8080
-  node-service:
-    container_name: node-service
-    build:
-      context: node-service
-      dockerfile: Dockerfile
-    image: nirmelregistry.azurecr.io/api-workshop/node-service:latest
-    environment:
-      - NODE_ENV=production
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    platform: linux/amd64
-    ports:
-      - 8084:8080
-  core-service:
-    container_name: core-service
-    build:
-      context: core-service
-      dockerfile: Dockerfile
-    image: nirmelregistry.azurecr.io/api-workshop/core-service:latest
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    platform: linux/amd64
-    ports:
-      - 8085:8080
+      - 23249:23249

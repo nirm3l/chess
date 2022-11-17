@@ -18,7 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.UUID;
 
-@Aggregate(snapshotTriggerDefinition = "chessAggregateSnapshotTriggerDefinition")
+@Aggregate(snapshotTriggerDefinition = "aggregateSnapshotTriggerDefinition")
 public class EngineAggregate {
 
     @AggregateIdentifier

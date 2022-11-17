@@ -2,38 +2,30 @@
 
 POST http://localhost:8080/games/{{game_id}}/play
 Content-Type: application/json
+User: {{player1}}
 
-{
-  "playerId": "{{player2}}",
-  "move": "f3"
-}
+{ "move": "f3" }
 
 ### Play 2 move
 
 POST http://localhost:8080/games/{{game_id}}/play
 Content-Type: application/json
+User: {{player2}}
 
-{
-  "playerId": "{{player1}}",
-  "move": "e6"
-}
+{ "move": "e6" }
 
 ### Play 3 move
 
 POST http://localhost:8080/games/{{game_id}}/play
 Content-Type: application/json
+User: {{player1}}
 
-{
-  "playerId": "{{player2}}",
-  "move": "g4"
-}
+{ "move": "g4" }
 
 ### Play 4 move
 
 POST http://localhost:8080/games/{{game_id}}/play
 Content-Type: application/json
+User: {{player2}}
 
-{
-  "playerId": "{{player1}}",
-  "move": "Qh4"
-}
+{ "move": "Qh4" }

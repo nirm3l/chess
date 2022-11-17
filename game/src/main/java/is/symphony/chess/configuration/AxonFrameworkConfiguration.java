@@ -1,6 +1,6 @@
 package is.symphony.chess.configuration;
 
-import is.symphony.chess.player.saga.PlayerEngineSaga;
+import is.symphony.chess.game.saga.ChessBoardSaga;
 import org.axonframework.modelling.saga.SagaRepository;
 import org.axonframework.modelling.saga.repository.AnnotatedSagaRepository;
 import org.axonframework.modelling.saga.repository.SagaStore;
@@ -14,10 +14,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class AxonFrameworkConfiguration {
 
     @Bean
-    public SagaRepository<PlayerEngineSaga> mySagaRepository(SagaStore sagaStore) {
+    public SagaRepository<ChessBoardSaga> mySagaRepository(SagaStore sagaStore) {
         return AnnotatedSagaRepository.builder()
                 .sagaStore(sagaStore)
-                .sagaType(PlayerEngineSaga.class)
+                .sagaType(ChessBoardSaga.class)
                 .build();
     }
 }

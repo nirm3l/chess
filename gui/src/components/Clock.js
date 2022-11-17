@@ -1,42 +1,43 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
+import {Badge} from "react-bootstrap";
 
-export default function SanViewer({game, onPositionChange}) {
-    const pgnRegex = /([0-9]*?\.)(.*?)(?=[0-9]*?\.|$)/gm;
+export default function Clock({clock, timestamp}) {
+    const [currentTimeout, setCurrentTimeout] = useState(undefined);
 
-    const getSanMoves = () => {
-        let result = [];
-
-        let m;
-
-        while ((m = pgnRegex.exec(game.pgn())) !== null) {
-            if (m.index === pgnRegex.lastIndex) {
-                pgnRegex.lastIndex++;
-            }
-
-            m.forEach((match, groupIndex) => {
-                if (groupIndex === 2) {
-                    const parts = match.split(' ');
-
-                    result.push(parts[1])
-                    result.push(parts[2])
-                }
-            });
+    const getClock = (milliseconds) => {
+        const padTo2Digits = (num) => {
+            return num.toString().padStart(2, '0');
         }
 
-        return result;
+        let seconds = Math.floor(milliseconds / 1000);
+        let minutes = Math.floor(seconds / 60);
+        let hours = Math.floor(minutes / 60);
+
+        return `${padTo2Digits(hours % 24)}:${padTo2Digits(minutes % 60)}:${padTo2Digits(seconds % 60)}`;
     }
 
+    const [currentClock, setCurrentClock] = useState(getClock(clock));
+
+    const refresh = () => {
+        setCurrentClock(currentClock => getClock(clock - (new Date().getTime() - timestamp)));
+    };
+
+    useEffect(() => {
+        if (timestamp) {
+            const newTimeout = setInterval(refresh, 100);
+            setCurrentTimeout((t) => newTimeout);
+
+            refresh();
+        }
+
+        return () => {
+            if (currentTimeout) {
+                clearTimeout(currentTimeout);
+            }
+        }
+    }, [currentClock])
+
     return (
-        <div className="san-viewer">
-            {
-                getSanMoves().map((move, index) => {
-                        return <span key={index}>
-                                        {index % 2 === 0 && <span>{((index / 2) + 1) + '. '}</span>}
-                            <a key={index} href="#" className="move" onClick={() => onPositionChange(index + 1)}>{move}</a>
-                                        <span> </span>
-                                    </span>
-                    }
-                )}
-        </div>
+        <Badge bg="light float-end" text="dark">{currentClock}</Badge>
     );
 }

@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Aggregate(snapshotTriggerDefinition = "gameAggregateSnapshotTriggerDefinition")
+@Aggregate(snapshotTriggerDefinition = "aggregateSnapshotTriggerDefinition")
 public class ChessBoardAggregate {
 
     public final static Long SECOND_MILLIS = 1000L;

@@ -15,7 +15,7 @@ import org.axonframework.spring.stereotype.Aggregate;
 
 import java.util.UUID;
 
-@Aggregate(snapshotTriggerDefinition = "chessAggregateSnapshotTriggerDefinition")
+@Aggregate(snapshotTriggerDefinition = "aggregateSnapshotTriggerDefinition")
 public class PlayerAggregate {
 
     @AggregateIdentifier

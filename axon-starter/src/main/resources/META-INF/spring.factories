@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+is.symphony.chess.AxonStarterConfiguration

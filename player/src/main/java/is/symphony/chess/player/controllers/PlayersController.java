@@ -3,6 +3,7 @@ package is.symphony.chess.player.controllers;
 import is.symphony.chess.player.core.commands.CheckPlayerExistenceCommand;
 import is.symphony.chess.player.core.commands.RegisterPlayerCommand;
 import is.symphony.chess.player.core.exceptions.PlayerAlreadyExistException;
+import is.symphony.chess.player.core.exceptions.PlayerNotFoundException;
 import is.symphony.chess.player.core.queries.GetAllPlayersQuery;
 import is.symphony.chess.player.core.queries.GetPlayerQuery;
 import is.symphony.chess.player.models.Player;
@@ -56,6 +57,7 @@ public class PlayersController {
 
     @GetMapping(value = "/{playerId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<Player> getPlayer(@PathVariable final UUID playerId) {
-        return queryGateway.query(new GetPlayerQuery(playerId), Player.class);
+        return queryGateway.query(new GetPlayerQuery(playerId), Player.class)
+                .switchIfEmpty(Mono.error(new PlayerNotFoundException()));
     }
 }

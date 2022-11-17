@@ -1,36 +1,29 @@
-### Create game
+### Create player 1
 
-POST http://localhost:8080/games
+POST http://localhost:8080/players
 Content-Type: application/json
-User: {{player2}}
 
 {
-  "invitePlayerId": "{{player1}}",
-  "minutes": 5,
-  "incrementSeconds": 3,
-  "pieceColor": "WHITE"
+  "name": "white-knight",
+  "bot": true,
+  "level": 5
 }
 
 > {%
-    client.global.set("game_id", response.body.gameId);
+    client.global.set("player1", response.body.playerId);
 %}
 
-### Accept invitation
+### Create bot player
 
-POST http://localhost:8080/games/{{game_id}}/accept-invite
+POST http://localhost:8080/players
 Content-Type: application/json
-User: {{player1}}
 
-### Play 1 move
+{
+  "name": "black-knight",
+  "bot": true,
+  "level": 20
+}
 
-POST http://localhost:8080/games/{{game_id}}/play
-Content-Type: application/json
-User: {{player2}}
-
-{ "move": "f3" }
-
-### Black resign game
-
-POST http://localhost:8080/games/{{game_id}}/resign
-Content-Type: application/json
-User: {{player1}}
+> {%
+    client.global.set("player2", response.body.playerId);
+%}

@@ -1,42 +1,42 @@
-import React, {useEffect, useState} from "react";
-import axios from "axios";
-import {Button, Table} from "react-bootstrap";
+import React from "react";
 
-export default function Players({}) {
-    const [players, setPlayers] = useState([]);
+export default function SanViewer({game, onPositionChange}) {
+    const pgnRegex = /([0-9]*?\.)(.*?)(?=[0-9]*?\.|$)/gm;
 
-    useEffect(() => {
-        axios.get('/players').then((response) => {
-            setPlayers(response.data);
-        });
+    const getSanMoves = () => {
+        let result = [];
 
-        return () => {
+        let m;
+
+        while ((m = pgnRegex.exec(game.pgn())) !== null) {
+            if (m.index === pgnRegex.lastIndex) {
+                pgnRegex.lastIndex++;
+            }
+
+            m.forEach((match, groupIndex) => {
+                if (groupIndex === 2) {
+                    const parts = match.split(' ');
+
+                    result.push(parts[1])
+                    result.push(parts[2])
+                }
+            });
         }
-    }, []);
+
+        return result;
+    }
 
     return (
-        <Table striped bordered hover>
-            <thead>
-            <tr>
-                <th>Name</th>
-                <th>Rating</th>
-                <th>Action</th>
-            </tr>
-            </thead>
-            <tbody>
+        <div className="san-viewer">
             {
-                players.map((player) =>
-                    <tr key={player.playerId}>
-                        <td>{player.name}</td>
-                        <td>{player.rating}</td>
-                        <td>
-                            <Button variant="primary" size="sm">
-                                Challenge
-                            </Button>
-                        </td>
-                    </tr>
+                getSanMoves().map((move, index) => {
+                        return <span key={index}>
+                                        {index % 2 === 0 && <span>{((index / 2) + 1) + '. '}</span>}
+                            <a key={index} href="#" className="move" onClick={() => onPositionChange(index + 1)}>{move}</a>
+                                        <span> </span>
+                                    </span>
+                    }
                 )}
-            </tbody>
-        </Table>
+        </div>
     );
 }

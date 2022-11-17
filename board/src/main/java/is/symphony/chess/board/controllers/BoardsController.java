@@ -1,5 +1,6 @@
 package is.symphony.chess.board.controllers;
 
+import is.symphony.chess.board.core.exceptions.BoardNotFoundException;
 import is.symphony.chess.board.core.queries.LiveUpdatesQuery;
 import is.symphony.chess.board.models.Board;
 import is.symphony.chess.board.core.queries.GetBoardQuery;
@@ -34,12 +35,14 @@ public class BoardsController {
 
     @GetMapping(value = "/{boardId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<Board> getBoard(@PathVariable final UUID boardId) {
-        return queryGateway.query(new GetBoardQuery(boardId), Board.class);
+        return queryGateway.query(new GetBoardQuery(boardId), Board.class)
+                .switchIfEmpty(Mono.error(new BoardNotFoundException()));
     }
 
     @GetMapping(value = "/{boardId}/screenshot", produces = MediaType.IMAGE_PNG_VALUE)
     public Flux<DataBuffer> getBoardScreenshot(@PathVariable final UUID boardId) {
-        return fenService.getImageContent(boardId);
+        return fenService.getImageContent(boardId)
+                .switchIfEmpty(Mono.error(new BoardNotFoundException()));
     }
 
     @GetMapping(value = "/{boardId}/analysis")
@@ -51,7 +54,7 @@ public class BoardsController {
                             response.setStatusCode(HttpStatus.TEMPORARY_REDIRECT);
                             response.getHeaders().setLocation(url);
                             return response.setComplete();
-                        });
+                        }).switchIfEmpty(Mono.error(new BoardNotFoundException()));
     }
 
     @SuppressWarnings("rawtypes")
@@ -60,6 +63,7 @@ public class BoardsController {
         return Flux.merge(
                 Flux.interval(Duration.ofMinutes(1)).map(i -> ServerSentEvent.builder().event("ping").build()),
                 queryGateway.subscriptionQuery(new LiveUpdatesQuery(boardId), Board.class, BoardEvent.class)
+                        .switchIfEmpty(Mono.error(new BoardNotFoundException()))
                         .flatMapMany(result -> Flux.concat(result.initialResult().map(board -> createServerSentEvent("board", board)),
                                 result.updates().mapNotNull(boardEvent -> {
                                     if (boardEvent.getBoardMove() != null) {

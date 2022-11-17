@@ -2,7 +2,7 @@
 
 POST http://localhost:8080/games
 Content-Type: application/json
-User: {{player2}}
+User: {{player1}}
 
 {
   "invitePlayerId": "{{player1}}",
@@ -19,18 +19,24 @@ User: {{player2}}
 
 POST http://localhost:8080/games/{{game_id}}/accept-invite
 Content-Type: application/json
-User: {{player1}}
+User: {{player2}}
 
 ### Play 1 move
 
 POST http://localhost:8080/games/{{game_id}}/play
 Content-Type: application/json
-User: {{player2}}
+User: {{player1}}
 
 { "move": "f3" }
 
-### Black resign game
+### Black draw
 
-POST http://localhost:8080/games/{{game_id}}/resign
+POST http://localhost:8080/games/{{game_id}}/draw
+Content-Type: application/json
+User: {{player2}}
+
+### White accepts draw
+
+POST http://localhost:8080/games/{{game_id}}/draw
 Content-Type: application/json
 User: {{player1}}

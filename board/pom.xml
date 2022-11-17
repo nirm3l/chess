@@ -7,71 +7,20 @@
         <artifactId>parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <groupId>is.symphony.chess</groupId>
-    <artifactId>game</artifactId>
+    <artifactId>board</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>game</name>
-    <description>game</description>
+    <name>board</name>
+    <description>board</description>
     <dependencies>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.axonframework.extensions.mongo</groupId>
-            <artifactId>axon-mongo</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.axonframework</groupId>
-            <artifactId>axon-spring-boot-starter</artifactId>
-<!--            <exclusions>-->
-<!--                <exclusion>-->
-<!--                    <groupId>org.axonframework</groupId>-->
-<!--                    <artifactId>axon-server-connector</artifactId>-->
-<!--                </exclusion>-->
-<!--            </exclusions>-->
-        </dependency>
-        <dependency>
-            <groupId>org.axonframework.extensions.reactor</groupId>
-            <artifactId>axon-reactor-spring-boot-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.axonframework</groupId>
-            <artifactId>axon-micrometer</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
+            <groupId>is.symphony.chess</groupId>
+            <artifactId>axon-starter</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.github.bhlangonijr</groupId>
             <artifactId>chesslib</artifactId>
             <version>1.3.3</version>
-        </dependency>
-        <dependency>
-            <groupId>net.andreinc</groupId>
-            <artifactId>neatchess</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.axonframework</groupId>
-            <artifactId>axon-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-test</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>

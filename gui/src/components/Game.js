@@ -1,82 +1,31 @@
 import {useNavigate, useParams} from "react-router-dom";
 import React, {useEffect, useState} from "react";
-import Chess from "chess.js";
-import {Chessboard} from "react-chessboard";
 import axios from "axios";
+import Board from "./Board";
 
-export default function Board({}) {
+export default function Game({}) {
     const navigate = useNavigate();
     const params = useParams();
 
-    const [game, setGame] = useState(() => {
-        return new Chess();
-    });
-
-    const[players, setPlayers] = useState([]);
-
-    const [loading, setLoading] = useState(true);
+    const[whitePlayer, setWhitePlayer] = useState({});
+    const[blackPlayer, setBlackPlayer] = useState({});
+    const[game, setGame] = useState(undefined);
 
     useEffect(() => {
-        const sse = new EventSource('/boards/' + params.boardId + '/live-updates');
+        axios.get('/games/' + params.gameId).then((response) => {
+            setGame(response.data);
 
-        const onBoard = (event) => {
-            setLoading(false);
-
-            const data = JSON.parse(event.data);
-
-            axios.get('/players/' + data.playerWhite).then((response) => {
-                setPlayers(response.data);
+            axios.get('/players/' + response.data.whitePlayerId).then((response) => {
+                setWhitePlayer(response.data);
             });
 
-            data.moves.forEach(move => {
-                safeGameMutate((game) => {
-                    game.move(move.move, { sloppy: true });
-                });
+            axios.get('/players/' + response.data.blackPlayerId).then((response) => {
+                setBlackPlayer(response.data);
             });
-        }
-
-        const onMove = (event) => {
-            const data = JSON.parse(event.data)
-
-            safeGameMutate((game) => {
-                game.move(data.move, { sloppy: true });
-            });
-        }
-
-        sse.addEventListener('move', onMove);
-        sse.addEventListener('board', onBoard);
-
-        sse.onerror = () => {
-            navigate("/error");
-
-            sse.close();
-        }
-
-        function safeGameMutate(modify) {
-            setGame((g) => {
-                const update = { ...g };
-                modify(update);
-                return update;
-            });
-        }
-
-        return () => {
-            sse.close();
-            sse.removeEventListener('board', onBoard)
-            sse.removeEventListener('move', onBoard)
-        }
+        });
     }, []);
 
-    return !loading ? <div>
-        <Chessboard
-            arePremovesAllowed={true}
-            animationDuration={0}
-            position={game.fen()}
-            arePiecesDraggable={false}
-            customBoardStyle={{
-                borderRadius: '4px',
-                boxShadow: '0 5px 15px rgba(0, 0, 0, 0.5)'
-            }}
-        />
-    </div> : "Loading...";
+    return (
+        game && <Board boardId={game.boardId} whitePlayer={whitePlayer} blackPlayer={blackPlayer}></Board>
+    );
 }
