@@ -114,10 +114,6 @@ export default function Board({boardId, whitePlayer, blackPlayer}) {
         sse.addEventListener('board', onBoardEvent);
         sse.addEventListener('result', onResult);
 
-        sse.onerror = () => {
-            sse.close();
-        }
-
         return () => {
             sse.close();
             sse.removeEventListener('board', onBoardEvent)
