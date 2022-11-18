@@ -1,10 +1,9 @@
-import {useNavigate, useParams} from "react-router-dom";
+import {useParams} from "react-router-dom";
 import React, {useEffect, useState} from "react";
 import axios from "axios";
 import Board from "./Board";
 
 export default function Game({}) {
-    const navigate = useNavigate();
     const params = useParams();
 
     const[whitePlayer, setWhitePlayer] = useState({});

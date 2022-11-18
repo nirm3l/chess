@@ -17,12 +17,6 @@ const Home = () => {
   return (<h1 className="header">Welcome To Chess!</h1>);
 };
 
-const Error = () => {
-  return "Board not found!";
-};
-
-export const ChessContext = React.createContext();
-
 function App() {
   return (
       <Container className="p-3">
@@ -30,7 +24,6 @@ function App() {
             <Routes>
               <Route path="game/:gameId" element={<Game />} />
               <Route path="home" element={<Home />} />
-              <Route path="error" element={<Error />} />
               <Route path="" element={<Navigate to="/home" />} />
             </Routes>
           </Router>

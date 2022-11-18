@@ -47,16 +47,15 @@ public class FailedSagasHandler<T> {
     public void execute(Consumer<T> consumer) {
         sagaRepository.find(RETRY_ASSOCIATION)
                 .forEach(sagaId -> DefaultUnitOfWork.startAndGet(null)
-                        .execute(() -> DefaultUnitOfWork.startAndGet(null)
-                                .execute(() -> {
-                                    Saga<T> sagaWrapper = sagaRepository.load(sagaId);
+                        .execute(() -> {
+                            final Saga<T> sagaWrapper = sagaRepository.load(sagaId);
 
-                                    sagaWrapper.execute(saga -> {
-                                        consumer.accept(saga);
+                            sagaWrapper.execute(saga -> {
+                                consumer.accept(saga);
 
-                                        executeFailedEvent(sagaWrapper, saga);
-                                    });
-                                })));
+                                executeFailedEvent(sagaWrapper, saga);
+                            });
+                        }));
     }
 
     public void executeFailedEvent(final Saga<T> sagaWrapper, final T saga) {

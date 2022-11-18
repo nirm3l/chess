@@ -1,4 +1,3 @@
-import {useNavigate} from "react-router-dom";
 import React, {useEffect, useState} from "react";
 import Chess from "chess.js";
 import {Badge, Button, ButtonGroup, Card, Col, ListGroup, Row} from "react-bootstrap";
@@ -8,8 +7,6 @@ import SanViewer from "./SanViewer";
 import Clock from "./Clock";
 
 export default function Board({boardId, whitePlayer, blackPlayer}) {
-    const navigate = useNavigate();
-
     const [game, setGame] = useState(() => {
         return new Chess();
     });
@@ -118,8 +115,6 @@ export default function Board({boardId, whitePlayer, blackPlayer}) {
         sse.addEventListener('result', onResult);
 
         sse.onerror = () => {
-            navigate("/error");
-
             sse.close();
         }
 
