@@ -20,3 +20,12 @@ services:
     platform: linux/arm64
     ports:
       - 23249:23249
+  gui:
+    container_name: gui
+    build:
+      context: gui
+      dockerfile: Dockerfile
+    image: gui
+    platform: linux/arm64
+    ports:
+      - 3000:3000
