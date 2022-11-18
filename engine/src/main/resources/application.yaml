@@ -17,3 +17,6 @@ axon:
 uci:
   host: localhost
   port: 23249
+
+server:
+  port: 8082

@@ -21,8 +21,6 @@ public class PlayerEngineSaga {
 
     public static final String ENGINE_ID_ASSOCIATION = "engineId";
 
-    public static final String RETRY_ASSOCIATION = "retry";
-
     private transient CommandGateway commandGateway;
 
     private UUID playerId;
@@ -48,14 +46,8 @@ public class PlayerEngineSaga {
             SagaLifecycle.associateWith(ENGINE_ID_ASSOCIATION, engineId.toString());
         }
 
-        try {
-            commandGateway.sendAndWait(new RegisterEngineCommand(engineId, playerRegisteredEvent.getName(), playerRegisteredEvent.getLevel()));
-        }
-        catch (Exception e) {
-            SagaLifecycle.associateWith(RETRY_ASSOCIATION, "true");
-
-            throw e;
-        }
+        commandGateway.sendAndWait(new RegisterEngineCommand(
+                engineId, playerRegisteredEvent.getName(), playerRegisteredEvent.getLevel()));
     }
 
     @SagaEventHandler(associationProperty = ENGINE_ID_ASSOCIATION)
@@ -68,13 +60,5 @@ public class PlayerEngineSaga {
     @SagaEventHandler(associationProperty = PLAYER_ID_ASSOCIATION)
     public void handle(PlayerEngineAssociatedEvent playerPairingCanceledEvent) {
         SagaLifecycle.end();
-    }
-
-    public UUID getPlayerId() {
-        return playerId;
-    }
-
-    public void retrySuccess() {
-        SagaLifecycle.removeAssociationWith(RETRY_ASSOCIATION, "true");
     }
 }

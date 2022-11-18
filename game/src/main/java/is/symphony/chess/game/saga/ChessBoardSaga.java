@@ -41,8 +41,6 @@ public class ChessBoardSaga {
 
     public static final String BOARD_ID_ASSOCIATION = "boardId";
 
-    public static final String RETRY_ASSOCIATION = "retry";
-
     private transient CommandGateway commandGateway;
 
     private transient ReactorQueryGateway queryGateway;
@@ -68,9 +66,11 @@ public class ChessBoardSaga {
     public void handle(GameReadyEvent gameReadyEvent) {
         gameId = gameReadyEvent.getGameId();
 
-        boardId = UUID.randomUUID();
+        if (boardId == null) {
+                boardId = UUID.randomUUID();
 
-        SagaLifecycle.associateWith(BOARD_ID_ASSOCIATION, boardId.toString());
+            SagaLifecycle.associateWith(BOARD_ID_ASSOCIATION, boardId.toString());
+        }
 
         try {
             commandGateway.
@@ -157,12 +157,7 @@ public class ChessBoardSaga {
     }
 
     private void playEngine(UUID engineId, String fen) {
-        try {
-            commandGateway.sendAndWait(new FindBestMoveCommand(engineId, gameId, fen));
-        }
-        catch (Exception e) {
-            SagaLifecycle.associateWith(RETRY_ASSOCIATION, "true");
-        }
+        commandGateway.sendAndWait(new FindBestMoveCommand(engineId, gameId, fen));
     }
 
     @SagaEventHandler(associationProperty = BOARD_ID_ASSOCIATION)
@@ -215,13 +210,5 @@ public class ChessBoardSaga {
     @SagaEventHandler(associationProperty = GAME_ID_ASSOCIATION)
     public void handle(GameCanceledEvent gameCanceledEvent) {
         SagaLifecycle.end();
-    }
-
-    public void retrySuccess() {
-        SagaLifecycle.removeAssociationWith(RETRY_ASSOCIATION, "true");
-    }
-
-    public UUID getBoardId() {
-        return boardId;
     }
 }

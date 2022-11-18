@@ -13,3 +13,6 @@ axon:
     general: default
     events: jackson
     messages: jackson
+
+server:
+  port: 8083

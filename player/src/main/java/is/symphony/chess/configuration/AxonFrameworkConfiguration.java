@@ -1,6 +1,11 @@
 package is.symphony.chess.configuration;
 
+import is.symphony.chess.FailedSagasHandler;
 import is.symphony.chess.player.saga.PlayerEngineSaga;
+import org.axonframework.config.ConfigurerModule;
+import org.axonframework.eventhandling.GenericDomainEventMessage;
+import org.axonframework.eventsourcing.eventstore.EventStore;
+import org.axonframework.modelling.saga.AnnotatedSaga;
 import org.axonframework.modelling.saga.SagaRepository;
 import org.axonframework.modelling.saga.repository.AnnotatedSagaRepository;
 import org.axonframework.modelling.saga.repository.SagaStore;
@@ -19,5 +24,30 @@ public class AxonFrameworkConfiguration {
                 .sagaStore(sagaStore)
                 .sagaType(PlayerEngineSaga.class)
                 .build();
+    }
+
+    @Bean
+    public ConfigurerModule listenerInvocationErrorHandlerConfigurer() {
+        return configurer -> configurer.
+                eventProcessing(eventProcessingConfigurer ->
+                        eventProcessingConfigurer
+                                .registerListenerInvocationErrorHandler(
+                                        "PlayerEngineSagaProcessor", conf -> (exception, event, eventHandler) -> {
+                                            if (event instanceof GenericDomainEventMessage && eventHandler instanceof AnnotatedSaga) {
+                                                AnnotatedSaga<?> handler = ((AnnotatedSaga<?>) eventHandler);
+
+                                                handler.getAssociationValues().add(FailedSagasHandler
+                                                        .getSeqNumAssociation(((GenericDomainEventMessage<?>) event).getSequenceNumber()));
+                                                handler.getAssociationValues().add(FailedSagasHandler
+                                                        .getAggregateIdAssociation(((GenericDomainEventMessage<?>) event).getAggregateIdentifier()));
+                                                handler.getAssociationValues().add(FailedSagasHandler.RETRY_ASSOCIATION);
+                                            }
+                                        }));
+    }
+
+    @Bean
+    public FailedSagasHandler<PlayerEngineSaga> failedSagasHandler(
+            final SagaRepository<PlayerEngineSaga> sagaRepository, final EventStore eventStore) {
+        return new FailedSagasHandler<>(sagaRepository, eventStore);
     }
 }
