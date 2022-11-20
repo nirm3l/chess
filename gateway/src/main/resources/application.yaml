@@ -12,7 +12,7 @@ spring:
           uri: http://localhost:8083
         - id: game
           predicates:
-            - Path=/games/**
+            - Path=/games/**, /requests/**
           uri: http://localhost:8084
         - id: player
           predicates:

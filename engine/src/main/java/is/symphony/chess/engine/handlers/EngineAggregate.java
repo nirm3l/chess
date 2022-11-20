@@ -9,6 +9,7 @@ import is.symphony.chess.engine.core.exceptions.CannotFindMoveException;
 import is.symphony.chess.engine.utils.ChessUCI;
 import net.andreinc.neatchess.client.UCIResponse;
 import net.andreinc.neatchess.client.model.Analysis;
+import net.andreinc.neatchess.client.model.BestMove;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
@@ -50,25 +51,53 @@ public class EngineAggregate {
             AggregateLifecycle.apply(new BestMoveEvent(
                     engineId, command.getGameId(), analysis.getBestMove().getLan(), analysis.getBestMove().getStrength().getScore()));
         }
-        else if (analysis != null && !analysis.isMate() && !analysis.isDraw()) {
-            throw new CannotFindMoveException();
+        else if (analysis == null || !analysis.isDraw() || !analysis.isMate()){
+            BestMove bestMove = getBestMove(command.getFen());
+
+            if (bestMove != null && bestMove.getCurrent() != null) {
+                AggregateLifecycle.apply(new BestMoveEvent(
+                        engineId, command.getGameId(), bestMove.getCurrent(), null));
+            }
+            else {
+                throw new CannotFindMoveException();
+            }
         }
     }
 
     private Analysis getAnalysis(final String fen) {
         final ChessUCI chessUCI = chessProvider.getChessUCI();
 
-        try {
-            chessUCI.setOption("Skill Level", level.toString());
-            chessUCI.uciNewGame();
+        chessUCI.setOption("Skill Level", level.toString());
+        chessUCI.uciNewGame();
 
+        try {
             if (fen != null) {
                 chessUCI.positionFen(fen);
             }
 
             UCIResponse<Analysis> response = chessUCI.analysis(level);
             return response.getResultOrThrow();
-        } finally {
+        }
+        finally {
+            chessUCI.close();
+        }
+    }
+
+    private BestMove getBestMove(final String fen) {
+        final ChessUCI chessUCI = chessProvider.getChessUCI();
+
+        chessUCI.setOption("Skill Level", level.toString());
+        chessUCI.uciNewGame();
+
+        try {
+            if (fen != null) {
+                chessUCI.positionFen(fen);
+            }
+
+            UCIResponse<BestMove> response = chessUCI.bestMove(level);
+            return response.getResultOrThrow();
+        }
+        finally {
             chessUCI.close();
         }
     }

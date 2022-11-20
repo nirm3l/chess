@@ -86,12 +86,28 @@ public class ChessBoardAggregate {
                 boardMove.setClock(minutes * MINUTE_MILLIS - clocks.getT2());
             }
 
+            boardMove.setResult(checkResult(command.getMove()));
+
             AggregateLifecycle.apply(new MovePlayedEvent(
                     command.getBoardId(), boardMove, tuple2.getT1(), tuple2.getT2()));
         }
         else {
             throw new IllegalMoveException(boardId);
         }
+    }
+
+    private String checkResult(final String move) {
+        getBoard().doMove(move);
+
+        BoardGameResult boardGameResult = getBoardGameResult(getBoard());
+
+        getBoard().undoMove();
+
+        if (boardGameResult != null) {
+            return boardGameResult.getResult();
+        }
+
+        return null;
     }
 
     @CommandHandler
@@ -134,7 +150,7 @@ public class ChessBoardAggregate {
 
     @ExceptionHandler
     public void handleBoardExceptions(BoardException exception) {
-        AggregateLifecycle.apply(new BoardErrorEvent(exception.getBoardId(), exception.getMessage()));
+        AggregateLifecycle.apply(new BoardErrorEvent(exception.getBoardId(), exception.getReason()));
     }
 
     private void addSanMove(MoveList moveList, String move, PlayerColor playerColor) {
@@ -207,7 +223,7 @@ public class ChessBoardAggregate {
         san = event.getBoardSan();
         drawOffer = null;
 
-        BoardGameResult result = getBoardGameResult();
+        BoardGameResult result = getBoardGameResult(getBoard());
 
         if (result != null) {
             AggregateLifecycle.apply(new BoardGameFinishedEvent(boardId, result.toString(), false));
@@ -231,11 +247,11 @@ public class ChessBoardAggregate {
         drawOffer = event.getPlayerColor();
     }
 
-    private BoardGameResult getBoardGameResult() {
-        if (getBoard().isMated()) {
-            return getBoard().getSideToMove() == Side.BLACK ? BoardGameResult.WIN_1_0 : BoardGameResult.WIN_0_1;
+    private BoardGameResult getBoardGameResult(Board board) {
+        if (board.isMated()) {
+            return board.getSideToMove() == Side.BLACK ? BoardGameResult.WIN_1_0 : BoardGameResult.WIN_0_1;
         }
-        else if (getBoard().isDraw()) {
+        else if (board.isDraw()) {
             return BoardGameResult.DRAW;
         }
 

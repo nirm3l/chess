@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class UCIConfiguration {
 
+
     @Bean
     public ChessProvider chessProvider(UCIProperties uciProperties) {
         return () -> {
