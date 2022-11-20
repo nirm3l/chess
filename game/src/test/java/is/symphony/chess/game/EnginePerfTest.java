@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-class PerformanceTest {
+class EnginePerfTest {
 
     private final List<Player> players = new ArrayList<>();
 
@@ -27,10 +27,10 @@ class PerformanceTest {
             .build();
 
     public static void main(String[] args) {
-        PerformanceTest test = new PerformanceTest();
+        EnginePerfTest test = new EnginePerfTest();
         test.createPlayers();
 
-        Flux.range(1, 10)
+        Flux.range(1, 1000)
                         .flatMap(i -> test.createRandomGameAndWaitToFinish(100, 3)
                                 .doOnNext(game ->
                                         System.out.println("Game " + game.getGameId() + " result: " + game.getResult())))
