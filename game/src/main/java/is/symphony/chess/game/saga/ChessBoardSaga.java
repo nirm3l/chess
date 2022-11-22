@@ -5,7 +5,6 @@ import is.symphony.chess.board.core.commands.DrawBoardGameCommand;
 import is.symphony.chess.board.core.commands.FinishBoardGameCommand;
 import is.symphony.chess.board.core.commands.PlayMoveCommand;
 import is.symphony.chess.board.core.events.BoardCanceledEvent;
-import is.symphony.chess.board.core.events.BoardCreatedEvent;
 import is.symphony.chess.board.core.events.BoardGameFinishedEvent;
 import is.symphony.chess.board.core.events.MovePlayedEvent;
 import is.symphony.chess.board.core.models.PlayerColor;
@@ -66,16 +65,14 @@ public class ChessBoardSaga {
     public void handle(GameReadyEvent gameReadyEvent) {
         gameId = gameReadyEvent.getGameId();
 
-        if (boardId == null) {
-                boardId = UUID.randomUUID();
+        try {
+            boardId = commandGateway.
+                    sendAndWait(new CreateBoardCommand(gameReadyEvent.getMinutes(),
+                    gameReadyEvent.getIncrementSeconds()));
 
             SagaLifecycle.associateWith(BOARD_ID_ASSOCIATION, boardId.toString());
-        }
 
-        try {
-            commandGateway.
-                    <UUID>sendAndWait(new CreateBoardCommand(boardId, gameReadyEvent.getMinutes(),
-                    gameReadyEvent.getIncrementSeconds()));
+            commandGateway.send(new AssociateGameWithBoardCommand(gameId, boardId));
         }
         catch (Exception e) {
             commandGateway.sendAndWait(new CancelGameCommand(gameId));
@@ -84,13 +81,8 @@ public class ChessBoardSaga {
     }
 
     @SagaEventHandler(associationProperty = BOARD_ID_ASSOCIATION)
-    public void handle(BoardCreatedEvent boardCreatedEvent) {
-        commandGateway.sendAndWait(new AssociateGameWithBoardCommand(gameId, boardId));
-    }
-
-    @SagaEventHandler(associationProperty = BOARD_ID_ASSOCIATION)
     public void handle(BoardGameFinishedEvent boardGameFinishedEvent) {
-        commandGateway.sendAndWait(new FinishGameCommand(gameId, boardGameFinishedEvent.getResult()));
+        commandGateway.send(new FinishGameCommand(gameId, boardGameFinishedEvent.getResult()));
     }
 
     @SagaEventHandler(associationProperty = GAME_ID_ASSOCIATION)
@@ -116,7 +108,7 @@ public class ChessBoardSaga {
 
     @SagaEventHandler(associationProperty = BOARD_ID_ASSOCIATION)
     public void handle(PlayerMovedEvent playerMovedEvent) {
-        commandGateway.sendAndWait(
+        commandGateway.send(
                 new PlayMoveCommand(playerMovedEvent.getBoardId(),
                         PlayerColor.valueOf(playerMovedEvent.getPlayerColor().toString()),
                         playerMovedEvent.getMove()));
@@ -124,6 +116,7 @@ public class ChessBoardSaga {
 
     @SagaEventHandler(associationProperty = BOARD_ID_ASSOCIATION)
     public void handle(MovePlayedEvent movePlayedEvent) {
+        // TODO: Make this triggered only in case one of players is engine player
         UUID engineToPlay = null;
 
         if (movePlayedEvent.getBoardMove().getPlayerColor() == PlayerColor.WHITE) {
@@ -140,7 +133,7 @@ public class ChessBoardSaga {
 
     @SagaEventHandler(associationProperty = GAME_ID_ASSOCIATION)
     public void handle(BestMoveEvent bestMoveEvent) {
-        commandGateway.sendAndWait(
+        commandGateway.send(
                 new PlayMoveCommand(boardId,
                         getPlayerColor(bestMoveEvent.getEngineId()),
                         bestMoveEvent.getMove()));
@@ -157,23 +150,23 @@ public class ChessBoardSaga {
     }
 
     private void playEngine(UUID engineId, String fen) {
-        commandGateway.sendAndWait(new FindBestMoveCommand(engineId, gameId, fen));
+        commandGateway.send(new FindBestMoveCommand(engineId, gameId, fen));
     }
 
     @SagaEventHandler(associationProperty = BOARD_ID_ASSOCIATION)
     public void handle(BoardCanceledEvent boardCanceledEvent) {
-        commandGateway.sendAndWait(new CancelGameCommand(gameId));
+        commandGateway.send(new CancelGameCommand(gameId));
     }
 
     @SagaEventHandler(associationProperty = GAME_ID_ASSOCIATION)
     public void handle(GameResignedEvent gameResignedEvent) {
-        commandGateway.sendAndWait(new FinishBoardGameCommand(
+        commandGateway.send(new FinishBoardGameCommand(
                 boardId, PlayerColor.valueOf(gameResignedEvent.getPlayerColor().toString())));
     }
 
     @SagaEventHandler(associationProperty = GAME_ID_ASSOCIATION)
     public void handle(GameDrawEvent gameDrawEvent) {
-        commandGateway.sendAndWait(new DrawBoardGameCommand(
+        commandGateway.send(new DrawBoardGameCommand(
                 boardId, PlayerColor.valueOf(gameDrawEvent.getPlayerColor().toString())));
     }
 

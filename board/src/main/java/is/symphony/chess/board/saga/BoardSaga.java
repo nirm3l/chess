@@ -86,7 +86,7 @@ public class BoardSaga {
 
     @SagaEventHandler(associationProperty = BOARD_ID_ASSOCIATION)
     public void handle(CancelBoardEvent boardCanceledEvent) {
-        commandGateway.sendAndWait(new CancelBoardCommand(boardId));
+        commandGateway.send(new CancelBoardCommand(boardId));
     }
 
     @SagaEventHandler(associationProperty = BOARD_ID_ASSOCIATION)
@@ -100,7 +100,7 @@ public class BoardSaga {
                 boardId, getOppositePlayer(timeIsUpEvent.getPlayerColor()));
         command.setTimeIsUp(true);
 
-        commandGateway.sendAndWait(command);
+        commandGateway.send(command);
     }
 
     @SagaEventHandler(associationProperty = BOARD_ID_ASSOCIATION)

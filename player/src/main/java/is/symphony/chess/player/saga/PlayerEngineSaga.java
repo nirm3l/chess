@@ -46,7 +46,7 @@ public class PlayerEngineSaga {
             SagaLifecycle.associateWith(ENGINE_ID_ASSOCIATION, engineId.toString());
         }
 
-        commandGateway.sendAndWait(new RegisterEngineCommand(
+        commandGateway.send(new RegisterEngineCommand(
                 engineId, playerRegisteredEvent.getName(), playerRegisteredEvent.getLevel()));
     }
 
@@ -54,7 +54,7 @@ public class PlayerEngineSaga {
     public void handle(EngineRegisteredEvent gamePairedEvent) {
         final UUID engineId = gamePairedEvent.getEngineId();
 
-        commandGateway.sendAndWait(new AssociateEngineCommand(playerId, engineId));
+        commandGateway.send(new AssociateEngineCommand(playerId, engineId));
     }
 
     @SagaEventHandler(associationProperty = PLAYER_ID_ASSOCIATION)

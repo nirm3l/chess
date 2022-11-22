@@ -15,8 +15,8 @@ public class CreateBoardCommand {
 
     public CreateBoardCommand() { }
 
-    public CreateBoardCommand(final UUID boardId, final Integer minutes, final Integer incrementSeconds) {
-        this.boardId = boardId;
+    public CreateBoardCommand(final Integer minutes, final Integer incrementSeconds) {
+        this.boardId = UUID.randomUUID();
         this.minutes = minutes;
         this.incrementSeconds = incrementSeconds;
     }
