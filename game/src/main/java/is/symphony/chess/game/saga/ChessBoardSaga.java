@@ -40,6 +40,8 @@ public class ChessBoardSaga {
 
     public static final String BOARD_ID_ASSOCIATION = "boardId";
 
+    public static final String ENGINE_BOARD_ID_ASSOCIATION = "engineBoardId";
+
     private transient CommandGateway commandGateway;
 
     private transient ReactorQueryGateway queryGateway;
@@ -101,6 +103,10 @@ public class ChessBoardSaga {
                     }
                 }).blockLast();
 
+        if (engines.size() > 0) {
+            SagaLifecycle.associateWith(ENGINE_BOARD_ID_ASSOCIATION, boardId.toString());
+        }
+
         if (engines.containsKey(PlayerColor.WHITE)) {
             playEngine(engines.get(PlayerColor.WHITE), null);
         }
@@ -114,9 +120,8 @@ public class ChessBoardSaga {
                         playerMovedEvent.getMove()));
     }
 
-    @SagaEventHandler(associationProperty = BOARD_ID_ASSOCIATION)
+    @SagaEventHandler(associationProperty = BOARD_ID_ASSOCIATION, keyName = ENGINE_BOARD_ID_ASSOCIATION)
     public void handle(MovePlayedEvent movePlayedEvent) {
-        // TODO: Make this triggered only in case one of players is engine player
         UUID engineToPlay = null;
 
         if (movePlayedEvent.getBoardMove().getPlayerColor() == PlayerColor.WHITE) {
