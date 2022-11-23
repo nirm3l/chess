@@ -51,7 +51,7 @@ public class BoardSaga {
     public void handle(BoardCreatedEvent boardCreatedEvent) {
         boardId = boardCreatedEvent.getBoardId();
 
-        cancelBoardToken = scheduler.schedule(Duration.ofMinutes(1), new CancelBoardEvent(boardId));
+        cancelBoardToken = scheduler.schedule(Duration.ofHours(1), new CancelBoardEvent(boardId));
     }
 
     @SagaEventHandler(associationProperty = BOARD_ID_ASSOCIATION)
