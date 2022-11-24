@@ -7,6 +7,7 @@ import is.symphony.chess.game.models.Game;
 import is.symphony.chess.game.core.queries.GetAllGamesQuery;
 import is.symphony.chess.game.core.queries.GetGameQuery;
 import is.symphony.chess.game.repositories.GameRepository;
+import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.queryhandling.QueryHandler;
 import org.axonframework.queryhandling.QueryUpdateEmitter;
@@ -17,6 +18,7 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 @Service
+@ProcessingGroup("GamesEventHandler")
 public class GamesEventHandler {
 
     private final GameRepository gameRepository;

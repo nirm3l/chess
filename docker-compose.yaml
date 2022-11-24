@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.9'
 services:
   axon:
     container_name: axon
@@ -6,18 +6,29 @@ services:
     ports:
       - 8024:8024
       - 8124:8124
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4096M
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xmx4096m"
   mongo:
     container_name: mongo
     image: mongo:6.0
     ports:
       - 27017:27017
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2048M
   stockfish:
     container_name: stockfish
     build:
       context: stockfish
       dockerfile: Dockerfile
     image: latest-stockfish
-    platform: linux/arm64
     ports:
       - 23249:23249
   gui:
@@ -26,6 +37,5 @@ services:
       context: gui
       dockerfile: Dockerfile
     image: gui
-    platform: linux/arm64
     ports:
       - 3000:3000

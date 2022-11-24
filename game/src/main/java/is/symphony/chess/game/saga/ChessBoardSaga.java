@@ -112,14 +112,6 @@ public class ChessBoardSaga {
         }
     }
 
-    @SagaEventHandler(associationProperty = BOARD_ID_ASSOCIATION)
-    public void handle(PlayerMovedEvent playerMovedEvent) {
-        commandGateway.send(
-                new PlayMoveCommand(playerMovedEvent.getBoardId(),
-                        PlayerColor.valueOf(playerMovedEvent.getPlayerColor().toString()),
-                        playerMovedEvent.getMove()));
-    }
-
     @SagaEventHandler(associationProperty = BOARD_ID_ASSOCIATION, keyName = ENGINE_BOARD_ID_ASSOCIATION)
     public void handle(MovePlayedEvent movePlayedEvent) {
         UUID engineToPlay = null;

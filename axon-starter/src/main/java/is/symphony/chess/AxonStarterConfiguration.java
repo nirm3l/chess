@@ -36,7 +36,7 @@ public class AxonStarterConfiguration {
     @ConditionalOnMissingBean
     public SnapshotTriggerDefinition aggregateSnapshotTriggerDefinition(
             Snapshotter snapshotter) {
-        return new EventCountSnapshotTriggerDefinition(snapshotter, 200);
+        return new EventCountSnapshotTriggerDefinition(snapshotter, 20);
     }
 
     @Bean

@@ -13,6 +13,11 @@ axon:
     general: default
     events: jackson
     messages: jackson
-
+  eventhandling:
+    processors:
+      BoardsEventHandler:
+        mode: pooled
+        thread-count: 4
+        initial-segment-count: 8
 server:
   port: 8083

@@ -8,6 +8,7 @@ import is.symphony.chess.board.models.Board;
 import is.symphony.chess.board.core.queries.GetBoardQuery;
 import is.symphony.chess.board.models.BoardEvent;
 import is.symphony.chess.board.repositories.BoardRepository;
+import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.queryhandling.QueryHandler;
 import org.axonframework.queryhandling.QueryUpdateEmitter;
@@ -15,6 +16,7 @@ import org.reactivestreams.Publisher;
 import org.springframework.stereotype.Service;
 
 @Service
+@ProcessingGroup("BoardsEventHandler")
 public class BoardsEventHandler {
 
     private final BoardRepository boardRepository;
