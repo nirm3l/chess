@@ -31,10 +31,14 @@ class PerfTest {
 
         Tuple2<Player, Player> players = test.createPlayers();
 
-        int size = 1000;
+        int size = 10000;
 
         List<Game> games = Flux.range(1, size)
-                .flatMap(i -> test.createRandomGameAndWaitToFinish(players))
+                .flatMap(i -> test.createGame(players), 1000)
+                .collectList().flatMapMany(Flux::fromIterable)
+                .flatMap(test::playGame, 1000)
+                .collectList().flatMapMany(Flux::fromIterable)
+                .flatMap(test::getGameWithResult, 1000)
                 .doOnNext(game -> {
                     assert game.getResult() != null;
                 }).collectList().block();
@@ -42,15 +46,13 @@ class PerfTest {
         assert games != null && games.size() == size;
     }
 
-    private Mono<Game> createRandomGameAndWaitToFinish(Tuple2<Player, Player> players) {
+
+    private Mono<Game> createGame(Tuple2<Player, Player> players) {
         final CreateGameCommand createGameCommand = new CreateGameCommand();
         createGameCommand.setMinutes(100);
         createGameCommand.setIncrementSeconds(0);
         createGameCommand.setPieceColor(CreateGameCommand.PieceColor.WHITE);
         createGameCommand.setInvitePlayerId(players.getT2().getPlayerId());
-
-        final MoveList moveList = new MoveList();
-        moveList.loadFromSan(PGN);
 
         return webClient.post()
                 .uri("/games")
@@ -58,7 +60,14 @@ class PerfTest {
                 .bodyValue(createGameCommand)
                 .retrieve()
                 .bodyToMono(Game.class)
-                .flatMap(game -> acceptInvite(game, createGameCommand.getInvitePlayerId()))
+                .flatMap(game -> acceptInvite(game, createGameCommand.getInvitePlayerId()));
+    }
+
+    private Mono<Game> playGame(Game g) {
+        final MoveList moveList = new MoveList();
+        moveList.loadFromSan(PGN);
+
+        return Mono.just(g)
                 .flatMap(this::getGameWithBoardInfo)
                 .flatMap(game -> Flux.fromIterable(moveList)
                         .index()
@@ -67,15 +76,15 @@ class PerfTest {
                             playerMoveCommand.setMove(moveTuple.getT2().toString());
 
                             if (moveTuple.getT1() % 2 == 0) {
-                                return playMove(game, players.getT1().getPlayerId(), playerMoveCommand).then();
+                                return playMove(game, game.getWhitePlayerId(), playerMoveCommand).then();
                             }
                             else {
-                                return playMove(game, players.getT2().getPlayerId(), playerMoveCommand).then();
+                                return playMove(game, game.getBlackPlayerId(), playerMoveCommand).then();
                             }
                         } ,1)
-                        .then(Mono.defer(() -> Flux.just(players.getT1(), players.getT2())
-                                .flatMap(player -> draw(game, player.getPlayerId())).collectList()))
-                        .then(Mono.defer(() -> getGameWithResult(game))));
+                        .then(Mono.defer(() -> Flux.just(game.getWhitePlayerId(), game.getBlackPlayerId())
+                                .flatMap(playerId -> draw(game, playerId)).collectList()))
+                        .thenReturn(game));
     }
 
     private Mono<Void> draw(final Game game, final UUID playerId) {

@@ -8,10 +8,14 @@ public class GameInvitationAcceptedEvent {
 
     private UUID playerId;
 
+    private Long version;
+
     public GameInvitationAcceptedEvent() { }
-    public GameInvitationAcceptedEvent(final UUID gameId, final UUID playerId) {
+
+    public GameInvitationAcceptedEvent(final UUID gameId, final UUID playerId, final Long version) {
         this.gameId = gameId;
         this.playerId = playerId;
+        this.version = version;
     }
 
     public UUID getGameId() {
@@ -28,5 +32,13 @@ public class GameInvitationAcceptedEvent {
 
     public void setPlayerId(final UUID playerId) {
         this.playerId = playerId;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(final Long version) {
+        this.version = version;
     }
 }

@@ -37,7 +37,8 @@ public class PlayersEventHandler {
     public void on(PlayerRatingUpdatedEvent event) {
         playerRepository.findById(event.getPlayerId())
                 .flatMap(player -> {
-                    player.setRating(event.getRating());
+                    player.setRating(player.getRating() + event.getRatingDelta());
+                    player.setVersion(event.getVersion());
 
                     return playerRepository.save(player);
                 }).block();
@@ -48,6 +49,7 @@ public class PlayersEventHandler {
         playerRepository.findById(event.getPlayerId())
                 .flatMap(player -> {
                     player.setEngineId(event.getEngineId());
+                    player.setVersion(event.getVersion());
 
                     return playerRepository.save(player);
                 }).block();

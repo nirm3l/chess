@@ -1,27 +1,22 @@
 package is.symphony.chess.player.core.commands;
 
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
-import org.axonframework.modelling.command.TargetAggregateVersion;
 
 import java.util.UUID;
 
-public class UpdateRatingCommand {
+public class RevertRatingCommand {
 
     @TargetAggregateIdentifier
     private UUID playerId;
 
     private Integer ratingDelta;
 
-    @TargetAggregateVersion
-    private Long version;
-
-    public UpdateRatingCommand() {
+    public RevertRatingCommand() {
     }
 
-    public UpdateRatingCommand(final UUID playerId, final Integer ratingDelta, final Long version) {
+    public RevertRatingCommand(final UUID playerId, final Integer ratingDelta) {
         this.playerId = playerId;
         this.ratingDelta = ratingDelta;
-        this.version = version;
     }
 
     public UUID getPlayerId() {
@@ -38,13 +33,5 @@ public class UpdateRatingCommand {
 
     public void setRatingDelta(final Integer ratingDelta) {
         this.ratingDelta = ratingDelta;
-    }
-
-    public Long getVersion() {
-        return version;
-    }
-
-    public void setVersion(final Long version) {
-        this.version = version;
     }
 }

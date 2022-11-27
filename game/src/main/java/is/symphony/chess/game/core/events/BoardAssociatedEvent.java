@@ -12,13 +12,16 @@ public class BoardAssociatedEvent {
 
     private UUID playerBlack;
 
+    private Long version;
+
     public BoardAssociatedEvent() { }
 
-    public BoardAssociatedEvent(final UUID gameId, final UUID boardId, final UUID playerWhite, final UUID playerBlack) {
+    public BoardAssociatedEvent(final UUID gameId, final UUID boardId, final UUID playerWhite, final UUID playerBlack, Long version) {
         this.gameId = gameId;
         this.boardId = boardId;
         this.playerWhite = playerWhite;
         this.playerBlack = playerBlack;
+        this.version = version;
     }
 
     public UUID getGameId() {
@@ -51,5 +54,13 @@ public class BoardAssociatedEvent {
 
     public void setPlayerBlack(final UUID playerBlack) {
         this.playerBlack = playerBlack;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(final Long version) {
+        this.version = version;
     }
 }

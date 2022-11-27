@@ -47,6 +47,6 @@ public class AxonFrameworkConfiguration {
     @Bean
     public FailedSagasHandler<ChessBoardSaga> failedSagasHandler(
             final SagaRepository<ChessBoardSaga> sagaRepository, final EventStore eventStore) {
-        return new FailedSagasHandler<>(sagaRepository, eventStore);
+        return new FailedSagasHandler<>(sagaRepository, eventStore, "handle", "handleWhitePlayer", "handleBlackPlayer");
     }
 }

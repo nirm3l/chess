@@ -30,10 +30,23 @@ public class FailedSagasHandler<T> {
 
     private final static String RETRY_AGGREGATE_ID_KEY = "retryAggregateId";
 
+    private final String[] handleMethods;
+
     public FailedSagasHandler(final SagaRepository<T> sagaRepository,
                               final EventStore eventStore) {
+        this(sagaRepository, eventStore, new String[]{});
+    }
+    public FailedSagasHandler(final SagaRepository<T> sagaRepository,
+                              final EventStore eventStore, String... handleMethods) {
         this.sagaRepository = sagaRepository;
         this.eventStore = eventStore;
+
+        if (handleMethods.length > 0) {
+            this.handleMethods = handleMethods;
+        }
+        else {
+            this.handleMethods = new String[]{"handle"};
+        }
     }
 
     public static AssociationValue getSeqNumAssociation(long seqNum) {
@@ -67,15 +80,18 @@ public class FailedSagasHandler<T> {
             if (stream.hasNext()) {
                 DomainEventMessage<?> message = stream.next();
 
-                try {
-                    Method method = saga.getClass().getMethod("handle", message.getPayloadType());
+                for (String handleMethod : handleMethods) {
+                    try {
+                        Method method = saga.getClass().getMethod(handleMethod, message.getPayloadType());
 
-                    method.invoke(saga, message.getPayload());
+                        method.invoke(saga, message.getPayload());
 
-                    sagaWrapper.getAssociationValues().remove(RETRY_ASSOCIATION);
-                }
-                catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-                    logger.warn("Failed to retry saga {}: ", sagaWrapper.getSagaIdentifier(), e);
+                        sagaWrapper.getAssociationValues().remove(RETRY_ASSOCIATION);
+
+                        break;
+                    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+                        logger.warn("Failed to retry saga {}: ", sagaWrapper.getSagaIdentifier(), e);
+                    }
                 }
             }
         }

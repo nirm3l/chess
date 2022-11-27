@@ -13,6 +13,8 @@ import is.symphony.chess.board.core.models.BoardMove;
 import is.symphony.chess.board.core.models.PlayerColor;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
+import org.axonframework.eventsourcing.conflictresolution.ConflictResolution;
+import org.axonframework.eventsourcing.conflictresolution.ConflictResolver;
 import org.axonframework.messaging.interceptors.ExceptionHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.modelling.command.AggregateLifecycle;
@@ -59,7 +61,14 @@ public class ChessBoardAggregate {
     }
 
     @CommandHandler
-    public void handle(PlayMoveCommand command) {
+    public void handle(PlayMoveCommand command, ConflictResolver conflictResolver) {
+        conflictResolver.detectConflicts(messages -> {
+            return true;
+        }, description -> {
+            return new RuntimeException();
+        });
+        
+
         if (result != null) {
             throw new IllegalMoveException();
         }

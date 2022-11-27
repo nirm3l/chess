@@ -46,8 +46,8 @@ class AxonTestApplicationTests {
         registerPlayerCommand.setName("test player");
 
         fixture.givenCommands(registerPlayerCommand)
-                .when(new UpdateRatingCommand(registerPlayerCommand.getPlayerId(), 1510))
+                .when(new UpdateRatingCommand(registerPlayerCommand.getPlayerId(), 1510, 1L))
                 .expectSuccessfulHandlerExecution()
-                .expectEvents(new PlayerRatingUpdatedEvent(registerPlayerCommand.getPlayerId(), 1510));
+                .expectEvents(new PlayerRatingUpdatedEvent(registerPlayerCommand.getPlayerId(), 1510, 2L));
     }
 }

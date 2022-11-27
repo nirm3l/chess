@@ -16,22 +16,29 @@ import is.symphony.chess.game.core.commands.FinishGameCommand;
 import is.symphony.chess.game.core.events.*;
 import is.symphony.chess.game.core.exceptions.ItsNotYourGameException;
 import is.symphony.chess.game.utils.EloRating;
+import is.symphony.chess.player.core.commands.RevertRatingCommand;
 import is.symphony.chess.player.core.commands.UpdateRatingCommand;
+import is.symphony.chess.player.core.events.PlayerRatingUpdateFailedEvent;
+import is.symphony.chess.player.core.events.PlayerRatingUpdatedEvent;
 import is.symphony.chess.player.core.queries.GetPlayerQuery;
 import is.symphony.chess.player.models.Player;
 import org.axonframework.commandhandling.gateway.CommandGateway;
-import org.axonframework.extensions.reactor.queryhandling.gateway.ReactorQueryGateway;
+import org.axonframework.eventhandling.scheduling.EventScheduler;
+import org.axonframework.eventhandling.scheduling.ScheduleToken;
 import org.axonframework.modelling.saga.SagaEventHandler;
 import org.axonframework.modelling.saga.SagaLifecycle;
 import org.axonframework.modelling.saga.StartSaga;
+import org.axonframework.queryhandling.QueryGateway;
 import org.axonframework.spring.stereotype.Saga;
 import org.springframework.beans.factory.annotation.Autowired;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
 
 @Saga
 public class ChessBoardSaga {
@@ -42,15 +49,35 @@ public class ChessBoardSaga {
 
     public static final String ENGINE_BOARD_ID_ASSOCIATION = "engineBoardId";
 
+    public static final String PLAYER_ID_ASSOCIATION = "playerId";
+
+    public static final String WHITE_PLAYER_ID_KEY = "whitePlayerId";
+
+    public static final String BLACK_PLAYER_ID_KEY = "blackPlayerId";
+
     private transient CommandGateway commandGateway;
 
-    private transient ReactorQueryGateway queryGateway;
+    private transient QueryGateway queryGateway;
+
+    private transient EventScheduler eventScheduler;
 
     private UUID gameId;
 
     private UUID boardId;
 
+    private String result;
+
+    private UUID whitePlayerId;
+
+    private UUID blackPlayerId;
+
+    private Integer whitePlayerRatingUpdatedDelta;
+
+    private Integer blackPlayerRatingUpdatedDelta;
+
     private final Map<PlayerColor, UUID> engines = new HashMap<>();
+
+    private ScheduleToken retryUpdatePlayerRatingsToken;
 
     @Autowired
     public void setCommandGateway(final CommandGateway commandGateway) {
@@ -58,8 +85,13 @@ public class ChessBoardSaga {
     }
 
     @Autowired
-    public void setQueryGateway(final ReactorQueryGateway queryGateway) {
+    public void setQueryGateway(final QueryGateway queryGateway) {
         this.queryGateway = queryGateway;
+    }
+
+    @Autowired
+    public void setEventScheduler(final EventScheduler eventScheduler) {
+        this.eventScheduler = eventScheduler;
     }
 
     @StartSaga
@@ -88,20 +120,25 @@ public class ChessBoardSaga {
     }
 
     @SagaEventHandler(associationProperty = GAME_ID_ASSOCIATION)
-    public void handle(BoardAssociatedEvent boardAssociatedEvent) {
+    public void handle(BoardAssociatedEvent boardAssociatedEvent) throws ExecutionException, InterruptedException {
         boardId = boardAssociatedEvent.getBoardId();
 
-        Flux.just(boardAssociatedEvent.getPlayerWhite(), boardAssociatedEvent.getPlayerBlack())
-                .flatMap(uuid -> queryGateway.query(new GetPlayerQuery(uuid), Player.class))
-                .filter(Player::isBot)
-                .doOnNext(player -> {
-                    if (player.getPlayerId().equals(boardAssociatedEvent.getPlayerWhite())) {
-                        engines.put(PlayerColor.WHITE, player.getEngineId());
-                    }
-                    else {
-                        engines.put(PlayerColor.BLACK, player.getEngineId());
-                    }
-                }).blockLast();
+        final CompletableFuture<Player> whitePlayerFuture = queryGateway.query(new GetPlayerQuery(boardAssociatedEvent.getPlayerWhite()), Player.class);
+        final CompletableFuture<Player> blackPlayerFuture = queryGateway.query(new GetPlayerQuery(boardAssociatedEvent.getPlayerBlack()), Player.class);
+
+        whitePlayerFuture.whenComplete((player, throwable) -> {
+            if (player.isBot()) {
+                engines.put(PlayerColor.WHITE, player.getEngineId());
+            }
+        });
+
+        blackPlayerFuture.whenComplete((player, throwable) -> {
+            if (player.isBot()) {
+                engines.put(PlayerColor.BLACK, player.getEngineId());
+            }
+        });
+
+        CompletableFuture.allOf(whitePlayerFuture, blackPlayerFuture).get();
 
         if (engines.size() > 0) {
             SagaLifecycle.associateWith(ENGINE_BOARD_ID_ASSOCIATION, boardId.toString());
@@ -168,33 +205,117 @@ public class ChessBoardSaga {
     }
 
     @SagaEventHandler(associationProperty = GAME_ID_ASSOCIATION)
-    public void handle(GameFinishedEvent gameFinishedEvent) {
-        Flux.just(gameFinishedEvent.getWhitePlayer(), gameFinishedEvent.getBlackPlayer())
-                .flatMapSequential(uuid -> queryGateway.query(new GetPlayerQuery(uuid), Player.class))
-                .collectList()
-                .flatMapMany(players -> {
-                    int whiteRating = players.get(0).getRating();
-                    int blackRating = players.get(1).getRating();
+    public void handle(GameFinishedEvent gameFinishedEvent) throws ExecutionException, InterruptedException {
+        result = gameFinishedEvent.getResult();
+        whitePlayerId = gameFinishedEvent.getWhitePlayer();
+        blackPlayerId = gameFinishedEvent.getBlackPlayer();
 
-                    switch (gameFinishedEvent.getResult()) {
-                        case "1/2-1/2":
-                            players.get(0).setRating(EloRating.calculate(whiteRating, blackRating, 0.5));
-                            players.get(1).setRating(EloRating.calculate(blackRating, whiteRating, 0.5));
-                            break;
-                        case "1-0":
-                            players.get(0).setRating(EloRating.calculate(whiteRating, blackRating, 1));
-                            players.get(1).setRating(EloRating.calculate(blackRating, whiteRating, 0));
-                            break;
-                        case "0-1":
-                            players.get(0).setRating(EloRating.calculate(whiteRating, blackRating, 0));
-                            players.get(1).setRating(EloRating.calculate(blackRating, whiteRating, 1));
-                    }
+        updateRatings();
+    }
 
-                    return Flux.fromIterable(players);
-                }).flatMap(player -> Mono.fromFuture(
-                        commandGateway.<Player>send(new UpdateRatingCommand(player.getPlayerId(), player.getRating())))).blockLast();
+    @SagaEventHandler(associationProperty = GAME_ID_ASSOCIATION)
+    public void handle(RetryUpdatePlayerRatingsEvent retryUpdatePlayerRatingsEvent) throws ExecutionException, InterruptedException {
+        updateRatings();
+    }
 
-        SagaLifecycle.end();
+    private void updateRatings() throws ExecutionException, InterruptedException {
+        final Player whitePlayer = queryGateway.query(new GetPlayerQuery(whitePlayerId), Player.class).get();
+        final Player blackPlayer = queryGateway.query(new GetPlayerQuery(blackPlayerId), Player.class).get();
+
+        int whiteRating = whitePlayer.getRating();
+        int blackRating = blackPlayer.getRating();
+
+        switch (result) {
+            case "1/2-1/2":
+                whitePlayer.setRating(EloRating.calculate(whiteRating, blackRating, 0.5));
+                blackPlayer.setRating(EloRating.calculate(blackRating, whiteRating, 0.5));
+                break;
+            case "1-0":
+                whitePlayer.setRating(EloRating.calculate(whiteRating, blackRating, 1));
+                blackPlayer.setRating(EloRating.calculate(blackRating, whiteRating, 0));
+                break;
+            case "0-1":
+                whitePlayer.setRating(EloRating.calculate(whiteRating, blackRating, 0));
+                blackPlayer.setRating(EloRating.calculate(blackRating, whiteRating, 1));
+        }
+
+        if (!whitePlayer.getRating().equals(whiteRating)) {
+            commandGateway.send(new UpdateRatingCommand(whitePlayer.getPlayerId(), whiteRating - whitePlayer.getRating(), whitePlayer.getVersion()));
+        }
+
+        if (!blackPlayer.getRating().equals(blackRating)) {
+            commandGateway.send(new UpdateRatingCommand(blackPlayer.getPlayerId(), blackRating - blackPlayer.getRating(), blackPlayer.getVersion()));
+        }
+    }
+
+    private void retryUpdatePlayerRatings() {
+        blackPlayerRatingUpdatedDelta = null;
+        whitePlayerRatingUpdatedDelta = null;
+
+        if (retryUpdatePlayerRatingsToken != null) {
+            eventScheduler.cancelSchedule(retryUpdatePlayerRatingsToken);
+
+            retryUpdatePlayerRatingsToken = null;
+        }
+
+        retryUpdatePlayerRatingsToken = eventScheduler.schedule(
+                Duration.ofSeconds(30), new RetryUpdatePlayerRatingsEvent(gameId));
+    }
+
+    @SagaEventHandler(associationProperty = PLAYER_ID_ASSOCIATION, keyName = BLACK_PLAYER_ID_KEY)
+    public void handleBlackPlayer(
+            PlayerRatingUpdatedEvent playerRatingUpdatedEvent) {
+        if (!playerRatingUpdatedEvent.isReverted()) {
+            blackPlayerRatingUpdatedDelta = playerRatingUpdatedEvent.getRatingDelta();
+
+            if (whitePlayerRatingUpdatedDelta != null && whitePlayerRatingUpdatedDelta != 0) {
+                SagaLifecycle.end();
+            }
+        }
+        else {
+            retryUpdatePlayerRatings();
+        }
+    }
+
+    @SagaEventHandler(associationProperty = PLAYER_ID_ASSOCIATION, keyName = WHITE_PLAYER_ID_KEY)
+    public void handleWhitePlayer(PlayerRatingUpdatedEvent playerRatingUpdatedEvent) {
+        if (!playerRatingUpdatedEvent.isReverted()) {
+            whitePlayerRatingUpdatedDelta = playerRatingUpdatedEvent.getRatingDelta();
+
+            if (blackPlayerRatingUpdatedDelta != null && blackPlayerRatingUpdatedDelta != 0) {
+                SagaLifecycle.end();
+            }
+        }
+        else {
+            retryUpdatePlayerRatings();
+        }
+    }
+
+    @SagaEventHandler(associationProperty = PLAYER_ID_ASSOCIATION, keyName = BLACK_PLAYER_ID_KEY)
+    public void handleBlackPlayer(PlayerRatingUpdateFailedEvent playerRatingUpdateFailedEvent) {
+        blackPlayerRatingUpdatedDelta = 0;
+
+        if (whitePlayerRatingUpdatedDelta != null) {
+            if (whitePlayerRatingUpdatedDelta != 0) {
+                commandGateway.send(new RevertRatingCommand(whitePlayerId, -1 * whitePlayerRatingUpdatedDelta));
+            } else {
+                retryUpdatePlayerRatings();
+            }
+        }
+    }
+
+    @SagaEventHandler(associationProperty = PLAYER_ID_ASSOCIATION, keyName = WHITE_PLAYER_ID_KEY)
+    public void handleWhitePlayer(PlayerRatingUpdateFailedEvent playerRatingUpdateFailedEvent) {
+        whitePlayerRatingUpdatedDelta = 0;
+
+        if (blackPlayerRatingUpdatedDelta != null) {
+            if (blackPlayerRatingUpdatedDelta != 0) {
+                commandGateway.send(new RevertRatingCommand(blackPlayerId, -1 * blackPlayerRatingUpdatedDelta));
+            }
+            else {
+                retryUpdatePlayerRatings();
+            }
+        }
     }
 
     @SagaEventHandler(associationProperty = GAME_ID_ASSOCIATION)

@@ -12,13 +12,16 @@ public class GameFinishedEvent {
 
     private UUID blackPlayer;
 
+    private Long version;
+
     public GameFinishedEvent() { }
 
-    public GameFinishedEvent(final UUID gameId, final String result, final UUID whitePlayer, final UUID blackPlayer) {
+    public GameFinishedEvent(final UUID gameId, final String result, final UUID whitePlayer, final UUID blackPlayer, final Long version) {
         this.gameId = gameId;
         this.result = result;
         this.whitePlayer = whitePlayer;
         this.blackPlayer = blackPlayer;
+        this.version = version;
     }
 
     public UUID getGameId() {
@@ -51,5 +54,13 @@ public class GameFinishedEvent {
 
     public void setBlackPlayer(final UUID blackPlayer) {
         this.blackPlayer = blackPlayer;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(final Long version) {
+        this.version = version;
     }
 }

@@ -22,6 +22,8 @@ public class Player {
 
     private Integer rating;
 
+    private Long version = 0L;
+
     public Player() { }
 
     public Player(final UUID playerId) {
@@ -82,5 +84,13 @@ public class Player {
 
     public void setEngineId(final UUID engineId) {
         this.engineId = engineId;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(final Long version) {
+        this.version = version;
     }
 }

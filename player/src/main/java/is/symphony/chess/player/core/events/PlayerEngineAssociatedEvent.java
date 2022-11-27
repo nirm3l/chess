@@ -8,11 +8,14 @@ public class PlayerEngineAssociatedEvent {
 
     private UUID engineId;
 
+    private Long version;
+
     public PlayerEngineAssociatedEvent() { }
 
-    public PlayerEngineAssociatedEvent(final UUID playerId, final UUID engineId) {
+    public PlayerEngineAssociatedEvent(final UUID playerId, final UUID engineId, final Long version) {
         this.playerId = playerId;
         this.engineId = engineId;
+        this.version = version;
     }
 
     public UUID getPlayerId() {
@@ -29,5 +32,13 @@ public class PlayerEngineAssociatedEvent {
 
     public void setEngineId(final UUID engineId) {
         this.engineId = engineId;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(final Long version) {
+        this.version = version;
     }
 }

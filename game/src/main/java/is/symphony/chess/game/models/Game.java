@@ -22,6 +22,8 @@ public class Game {
 
     private String result;
 
+    private Long version = 0L;
+
     private transient boolean canceled;
 
     public Game() { }
@@ -97,5 +99,13 @@ public class Game {
 
     public void setCanceled(final boolean canceled) {
         this.canceled = canceled;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(final Long version) {
+        this.version = version;
     }
 }

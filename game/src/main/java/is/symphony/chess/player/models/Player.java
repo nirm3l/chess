@@ -1,13 +1,8 @@
 package is.symphony.chess.player.models;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import java.util.UUID;
 
-@Document(collection = "players")
 public class Player {
-    @Id
     private UUID playerId;
 
     private UUID engineId;
@@ -21,6 +16,8 @@ public class Player {
     private Integer level;
 
     private Integer rating;
+
+    private Long version;
 
     public Player() { }
 
@@ -82,5 +79,13 @@ public class Player {
 
     public void setEngineId(final UUID engineId) {
         this.engineId = engineId;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(final Long version) {
+        this.version = version;
     }
 }

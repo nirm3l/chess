@@ -42,19 +42,19 @@ public class GamesEventHandler {
 
     @EventHandler
     public void on(GamePairedEvent event) {
-        updateGame(event.getGameId(), event.getPlayerId())
+        updateGame(event.getGameId(), event.getPlayerId(), event.getVersion())
                 .doOnNext(game -> emitter.emit(LiveUpdatesQuery.class, q -> event.getGameId()
                         .equals(q.getGameId()), game)).block();
     }
 
     @EventHandler
     public void on(GameInvitationAcceptedEvent event) {
-        updateGame(event.getGameId(), event.getPlayerId())
+        updateGame(event.getGameId(), event.getPlayerId(), event.getVersion())
                 .doOnNext(game -> emitter.emit(LiveUpdatesQuery.class, q -> event.getGameId()
                         .equals(q.getGameId()), game)).block();
     }
 
-    private Mono<Game> updateGame(UUID gameId, UUID playerId) {
+    private Mono<Game> updateGame(UUID gameId, UUID playerId, Long version) {
         return gameRepository.findById(gameId)
                 .flatMap(game -> {
                     if (game.getBlackPlayerId() == null) {
@@ -63,6 +63,8 @@ public class GamesEventHandler {
                     else if (game.getWhitePlayerId() == null) {
                         game.setWhitePlayerId(playerId);
                     }
+
+                    game.setVersion(version);
 
                     return gameRepository.save(game);
                 });
@@ -73,6 +75,7 @@ public class GamesEventHandler {
         gameRepository.findById(event.getGameId())
                 .flatMap(game -> {
                     game.setBoardId(event.getBoardId());
+                    game.setVersion(event.getVersion());
 
                     return gameRepository.save(game);
                 }).doOnNext(game -> emitter.emit(LiveUpdatesQuery.class, q -> event.getGameId()
@@ -84,6 +87,7 @@ public class GamesEventHandler {
         gameRepository.findById(event.getGameId())
                 .flatMap(game -> {
                     game.setResult(event.getResult());
+                    game.setVersion(event.getVersion());
 
                     return gameRepository.save(game);
                 }).doOnNext(game -> emitter.emit(LiveUpdatesQuery.class, q -> event.getGameId()

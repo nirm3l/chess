@@ -56,7 +56,7 @@ public class GameAggregate {
             throw new IncorrectInvitePlayerException();
         }
 
-        AggregateLifecycle.apply(new GameInvitationAcceptedEvent(command.getGameId(), command.getPlayerId()));
+        AggregateLifecycle.apply(new GameInvitationAcceptedEvent(command.getGameId(), command.getPlayerId(), AggregateLifecycle.getVersion() + 1));
     }
 
     @CommandHandler
@@ -77,13 +77,14 @@ public class GameAggregate {
             throw new GameAlreadyPairedException();
         }
 
-        AggregateLifecycle.apply(new GamePairedEvent(command.getGameId(), command.getPlayerId(), command.getRequestId()));
+        AggregateLifecycle.apply(new GamePairedEvent(
+                command.getGameId(), command.getPlayerId(), command.getRequestId(), AggregateLifecycle.getVersion() + 1));
     }
 
     @CommandHandler
     public void handle(AssociateGameWithBoardCommand command) {
         AggregateLifecycle.apply(new BoardAssociatedEvent(
-                command.getGameId(), command.getBoardId(), whitePlayerId, blackPlayerId));
+                command.getGameId(), command.getBoardId(), whitePlayerId, blackPlayerId, AggregateLifecycle.getVersion() + 1));
     }
 
     @CommandHandler
@@ -113,7 +114,7 @@ public class GameAggregate {
     @CommandHandler
     public void handle(FinishGameCommand command) {
         AggregateLifecycle.apply(new GameFinishedEvent(
-                command.getGameId(), command.getResult(), whitePlayerId, blackPlayerId));
+                command.getGameId(), command.getResult(), whitePlayerId, blackPlayerId, AggregateLifecycle.getVersion() + 1));
     }
 
     @CommandHandler

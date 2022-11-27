@@ -10,12 +10,15 @@ public class GamePairedEvent {
 
     private UUID requestId;
 
+    private Long version;
+
     public GamePairedEvent() { }
 
-    public GamePairedEvent(final UUID gameId, final UUID playerId, final UUID requestId) {
+    public GamePairedEvent(final UUID gameId, final UUID playerId, final UUID requestId, final Long version) {
         this.gameId = gameId;
         this.playerId = playerId;
         this.requestId = requestId;
+        this.version = version;
     }
 
     public UUID getGameId() {
@@ -40,5 +43,13 @@ public class GamePairedEvent {
 
     public void setRequestId(final UUID requestId) {
         this.requestId = requestId;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(final Long version) {
+        this.version = version;
     }
 }

@@ -1,16 +1,17 @@
 package is.symphony.chess.player.handlers;
 
-import is.symphony.chess.player.core.commands.AssociateEngineCommand;
-import is.symphony.chess.player.core.commands.CheckPlayerExistenceCommand;
-import is.symphony.chess.player.core.commands.RegisterPlayerCommand;
-import is.symphony.chess.player.core.commands.UpdateRatingCommand;
+import is.symphony.chess.player.core.commands.*;
 import is.symphony.chess.player.core.events.PlayerEngineAssociatedEvent;
+import is.symphony.chess.player.core.events.PlayerRatingUpdateFailedEvent;
 import is.symphony.chess.player.core.events.PlayerRatingUpdatedEvent;
 import is.symphony.chess.player.core.events.PlayerRegisteredEvent;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
+import org.axonframework.eventsourcing.conflictresolution.ConflictResolver;
+import org.axonframework.eventsourcing.conflictresolution.Conflicts;
 import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.modelling.command.AggregateLifecycle;
+import org.axonframework.modelling.command.ConflictingModificationException;
 import org.axonframework.spring.stereotype.Aggregate;
 
 import java.util.UUID;
@@ -47,13 +48,30 @@ public class PlayerAggregate {
     }
 
     @CommandHandler
-    public void handle(UpdateRatingCommand command) {
-        AggregateLifecycle.apply(new PlayerRatingUpdatedEvent(command.getPlayerId(), command.getRating()));
+    public void handle(UpdateRatingCommand command, ConflictResolver conflictResolver) {
+        try {
+            conflictResolver.detectConflicts(Conflicts.payloadTypeOf(PlayerRatingUpdatedEvent.class));
+
+            AggregateLifecycle.apply(new PlayerRatingUpdatedEvent(
+                    command.getPlayerId(), command.getRatingDelta(), AggregateLifecycle.getVersion() + 1));
+        }
+        catch (ConflictingModificationException e) {
+            AggregateLifecycle.apply(new PlayerRatingUpdateFailedEvent(command.getPlayerId()));
+        }
+    }
+
+    @CommandHandler
+    public void handle(RevertRatingCommand command) {
+        PlayerRatingUpdatedEvent event = new PlayerRatingUpdatedEvent(
+                command.getPlayerId(), command.getRatingDelta(), AggregateLifecycle.getVersion() + 1);
+        event.setReverted(true);
+
+        AggregateLifecycle.apply(event);
     }
 
     @CommandHandler
     public void handle(AssociateEngineCommand command) {
-        AggregateLifecycle.apply(new PlayerEngineAssociatedEvent(command.getPlayerId(), command.getEngineId()));
+        AggregateLifecycle.apply(new PlayerEngineAssociatedEvent(command.getPlayerId(), command.getEngineId(), AggregateLifecycle.getVersion() + 1));
     }
 
     @EventSourcingHandler
@@ -72,6 +90,6 @@ public class PlayerAggregate {
 
     @EventSourcingHandler
     public void on(PlayerRatingUpdatedEvent event) {
-        rating = event.getRating();
+        rating += event.getRatingDelta();
     }
 }
