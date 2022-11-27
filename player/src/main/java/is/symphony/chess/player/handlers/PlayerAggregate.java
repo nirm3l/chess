@@ -53,20 +53,17 @@ public class PlayerAggregate {
             conflictResolver.detectConflicts(Conflicts.payloadTypeOf(PlayerRatingUpdatedEvent.class));
 
             AggregateLifecycle.apply(new PlayerRatingUpdatedEvent(
-                    command.getPlayerId(), command.getRatingDelta(), AggregateLifecycle.getVersion() + 1));
+                    command.getPlayerId(), command.getGameId(), command.getRatingDelta(), AggregateLifecycle.getVersion() + 1, false));
         }
         catch (ConflictingModificationException e) {
-            AggregateLifecycle.apply(new PlayerRatingUpdateFailedEvent(command.getPlayerId()));
+            AggregateLifecycle.apply(new PlayerRatingUpdateFailedEvent(command.getPlayerId(), command.getGameId()));
         }
     }
 
     @CommandHandler
     public void handle(RevertRatingCommand command) {
-        PlayerRatingUpdatedEvent event = new PlayerRatingUpdatedEvent(
-                command.getPlayerId(), command.getRatingDelta(), AggregateLifecycle.getVersion() + 1);
-        event.setReverted(true);
-
-        AggregateLifecycle.apply(event);
+        AggregateLifecycle.apply(new PlayerRatingUpdatedEvent(
+                command.getPlayerId(), command.getGameId(), command.getRatingDelta(), AggregateLifecycle.getVersion() + 1, true));
     }
 
     @CommandHandler
@@ -92,4 +89,7 @@ public class PlayerAggregate {
     public void on(PlayerRatingUpdatedEvent event) {
         rating += event.getRatingDelta();
     }
+
+    @EventSourcingHandler
+    public void on(PlayerRatingUpdateFailedEvent event) {}
 }

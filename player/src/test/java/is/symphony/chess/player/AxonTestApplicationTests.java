@@ -45,9 +45,11 @@ class AxonTestApplicationTests {
         RegisterPlayerCommand registerPlayerCommand = new RegisterPlayerCommand(UUID.randomUUID());
         registerPlayerCommand.setName("test player");
 
+        final UUID gameId = UUID.randomUUID();
+
         fixture.givenCommands(registerPlayerCommand)
-                .when(new UpdateRatingCommand(registerPlayerCommand.getPlayerId(), 1510, 1L))
+                .when(new UpdateRatingCommand(registerPlayerCommand.getPlayerId(), gameId, 1510, 0L))
                 .expectSuccessfulHandlerExecution()
-                .expectEvents(new PlayerRatingUpdatedEvent(registerPlayerCommand.getPlayerId(), 1510, 2L));
+                .expectEvents(new PlayerRatingUpdatedEvent(registerPlayerCommand.getPlayerId(), gameId, 1510, 1L, false));
     }
 }

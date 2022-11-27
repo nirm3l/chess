@@ -30,6 +30,8 @@ import org.axonframework.modelling.saga.SagaLifecycle;
 import org.axonframework.modelling.saga.StartSaga;
 import org.axonframework.queryhandling.QueryGateway;
 import org.axonframework.spring.stereotype.Saga;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Duration;
@@ -38,22 +40,17 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Stream;
 
 @Saga
 public class ChessBoardSaga {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ChessBoardSaga.class);
 
     public static final String GAME_ID_ASSOCIATION = "gameId";
 
     public static final String BOARD_ID_ASSOCIATION = "boardId";
 
     public static final String ENGINE_BOARD_ID_ASSOCIATION = "engineBoardId";
-
-    public static final String PLAYER_ID_ASSOCIATION = "playerId";
-
-    public static final String WHITE_PLAYER_ID_KEY = "whitePlayerId";
-
-    public static final String BLACK_PLAYER_ID_KEY = "blackPlayerId";
 
     private transient CommandGateway commandGateway;
 
@@ -71,9 +68,7 @@ public class ChessBoardSaga {
 
     private UUID blackPlayerId;
 
-    private Integer whitePlayerRatingUpdatedDelta;
-
-    private Integer blackPlayerRatingUpdatedDelta;
+    private final Map<UUID, Integer> playerRatingUpdatedDeltas = new HashMap<>();
 
     private final Map<PlayerColor, UUID> engines = new HashMap<>();
 
@@ -219,6 +214,10 @@ public class ChessBoardSaga {
     }
 
     private void updateRatings() throws ExecutionException, InterruptedException {
+        playerRatingUpdatedDeltas.clear();
+
+        LOG.info("Update ratings for {}.", gameId);
+
         final Player whitePlayer = queryGateway.query(new GetPlayerQuery(whitePlayerId), Player.class).get();
         final Player blackPlayer = queryGateway.query(new GetPlayerQuery(blackPlayerId), Player.class).get();
 
@@ -240,81 +239,92 @@ public class ChessBoardSaga {
         }
 
         if (!whitePlayer.getRating().equals(whiteRating)) {
-            commandGateway.send(new UpdateRatingCommand(whitePlayer.getPlayerId(), whiteRating - whitePlayer.getRating(), whitePlayer.getVersion()));
+            commandGateway.send(new UpdateRatingCommand(
+                    whitePlayerId, gameId, whitePlayer.getRating() - whiteRating, whitePlayer.getVersion()));
+        }
+        else {
+            LOG.info("Game {} no update rating needed for player {}.", gameId, whitePlayerId);
+            playerRatingUpdatedDeltas.put(whitePlayerId, Integer.MAX_VALUE);
         }
 
         if (!blackPlayer.getRating().equals(blackRating)) {
-            commandGateway.send(new UpdateRatingCommand(blackPlayer.getPlayerId(), blackRating - blackPlayer.getRating(), blackPlayer.getVersion()));
+            commandGateway.send(new UpdateRatingCommand(
+                    blackPlayerId, gameId, blackPlayer.getRating() - blackRating, blackPlayer.getVersion()));
+        }
+        else {
+            LOG.info("Game {} no update rating needed for player {}.", gameId, blackPlayerId);
+            playerRatingUpdatedDeltas.put(blackPlayerId, Integer.MAX_VALUE);
+        }
+
+        if (playerRatingUpdatedDeltas.size() == 2) {
+            SagaLifecycle.end();
         }
     }
 
     private void retryUpdatePlayerRatings() {
-        blackPlayerRatingUpdatedDelta = null;
-        whitePlayerRatingUpdatedDelta = null;
+        LOG.info("Game {} schedule update rating retry.", gameId);
 
         if (retryUpdatePlayerRatingsToken != null) {
-            eventScheduler.cancelSchedule(retryUpdatePlayerRatingsToken);
-
-            retryUpdatePlayerRatingsToken = null;
-        }
-
-        retryUpdatePlayerRatingsToken = eventScheduler.schedule(
-                Duration.ofSeconds(30), new RetryUpdatePlayerRatingsEvent(gameId));
-    }
-
-    @SagaEventHandler(associationProperty = PLAYER_ID_ASSOCIATION, keyName = BLACK_PLAYER_ID_KEY)
-    public void handleBlackPlayer(
-            PlayerRatingUpdatedEvent playerRatingUpdatedEvent) {
-        if (!playerRatingUpdatedEvent.isReverted()) {
-            blackPlayerRatingUpdatedDelta = playerRatingUpdatedEvent.getRatingDelta();
-
-            if (whitePlayerRatingUpdatedDelta != null && whitePlayerRatingUpdatedDelta != 0) {
-                SagaLifecycle.end();
-            }
+            retryUpdatePlayerRatingsToken = eventScheduler.reschedule(
+                    retryUpdatePlayerRatingsToken, Duration.ofSeconds(30), new RetryUpdatePlayerRatingsEvent(gameId));
         }
         else {
+            retryUpdatePlayerRatingsToken = eventScheduler.schedule(
+                    Duration.ofSeconds(30), new RetryUpdatePlayerRatingsEvent(gameId));
+        }
+    }
+
+    @SagaEventHandler(associationProperty = GAME_ID_ASSOCIATION)
+    public void handle(PlayerRatingUpdatedEvent event) {
+        if (!event.isReverted()) {
+            playerRatingUpdatedDeltas.put(event.getPlayerId(), event.getRatingDelta());
+
+            LOG.info("Game {} success update rating for player {}.", gameId, event.getPlayerId());
+
+            if (playerRatingUpdatedDeltas.size() == 2) {
+                if (playerRatingUpdatedDeltas.get(getOppositePlayerId(event.getPlayerId())) != 0)
+                    SagaLifecycle.end();
+                }
+                else {
+                    retryUpdatePlayerRatings();
+                }
+        }
+        else {
+            LOG.info("Game {} reverted update rating for player {}.", gameId, event.getPlayerId());
+
             retryUpdatePlayerRatings();
         }
     }
 
-    @SagaEventHandler(associationProperty = PLAYER_ID_ASSOCIATION, keyName = WHITE_PLAYER_ID_KEY)
-    public void handleWhitePlayer(PlayerRatingUpdatedEvent playerRatingUpdatedEvent) {
-        if (!playerRatingUpdatedEvent.isReverted()) {
-            whitePlayerRatingUpdatedDelta = playerRatingUpdatedEvent.getRatingDelta();
+    @SagaEventHandler(associationProperty = GAME_ID_ASSOCIATION)
+    public void handle(PlayerRatingUpdateFailedEvent event) {
+        LOG.info("Game {} failed update rating for player {}.", gameId, event.getPlayerId());
 
-            if (blackPlayerRatingUpdatedDelta != null && blackPlayerRatingUpdatedDelta != 0) {
-                SagaLifecycle.end();
-            }
-        }
-        else {
-            retryUpdatePlayerRatings();
-        }
-    }
+        playerRatingUpdatedDeltas.put(event.getPlayerId(), 0);
 
-    @SagaEventHandler(associationProperty = PLAYER_ID_ASSOCIATION, keyName = BLACK_PLAYER_ID_KEY)
-    public void handleBlackPlayer(PlayerRatingUpdateFailedEvent playerRatingUpdateFailedEvent) {
-        blackPlayerRatingUpdatedDelta = 0;
+        if (playerRatingUpdatedDeltas.size() == 2) {
+            final UUID oppositePlayerId = getOppositePlayerId(event.getPlayerId());
 
-        if (whitePlayerRatingUpdatedDelta != null) {
-            if (whitePlayerRatingUpdatedDelta != 0) {
-                commandGateway.send(new RevertRatingCommand(whitePlayerId, -1 * whitePlayerRatingUpdatedDelta));
-            } else {
+            if (playerRatingUpdatedDeltas.get(oppositePlayerId) == Integer.MAX_VALUE) {
                 retryUpdatePlayerRatings();
             }
-        }
-    }
+            else if (playerRatingUpdatedDeltas.get(oppositePlayerId) != 0) {
+                LOG.info("Game {} reverting update rating for player {}.", gameId, oppositePlayerId);
 
-    @SagaEventHandler(associationProperty = PLAYER_ID_ASSOCIATION, keyName = WHITE_PLAYER_ID_KEY)
-    public void handleWhitePlayer(PlayerRatingUpdateFailedEvent playerRatingUpdateFailedEvent) {
-        whitePlayerRatingUpdatedDelta = 0;
-
-        if (blackPlayerRatingUpdatedDelta != null) {
-            if (blackPlayerRatingUpdatedDelta != 0) {
-                commandGateway.send(new RevertRatingCommand(blackPlayerId, -1 * blackPlayerRatingUpdatedDelta));
+                commandGateway.send(new RevertRatingCommand(oppositePlayerId, gameId, -1 * playerRatingUpdatedDeltas.get(oppositePlayerId)));
             }
             else {
                 retryUpdatePlayerRatings();
             }
+        }
+    }
+
+    private UUID getOppositePlayerId(final UUID playerId) {
+        if (playerId.equals(whitePlayerId)) {
+            return blackPlayerId;
+        }
+        else {
+            return whitePlayerId;
         }
     }
 

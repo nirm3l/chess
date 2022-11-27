@@ -6,10 +6,13 @@ public class PlayerRatingUpdateFailedEvent {
 
     private UUID playerId;
 
+    private UUID gameId;
+
     public PlayerRatingUpdateFailedEvent() { }
 
-    public PlayerRatingUpdateFailedEvent(final UUID playerId) {
+    public PlayerRatingUpdateFailedEvent(final UUID playerId, final UUID gameId) {
         this.playerId = playerId;
+        this.gameId = gameId;
     }
 
     public UUID getPlayerId() {
@@ -18,5 +21,13 @@ public class PlayerRatingUpdateFailedEvent {
 
     public void setPlayerId(final UUID playerId) {
         this.playerId = playerId;
+    }
+
+    public UUID getGameId() {
+        return gameId;
+    }
+
+    public void setGameId(final UUID gameId) {
+        this.gameId = gameId;
     }
 }

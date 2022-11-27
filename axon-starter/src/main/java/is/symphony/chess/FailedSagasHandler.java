@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 
 public class FailedSagasHandler<T> {
 
-    private transient final Logger logger = LoggerFactory.getLogger(FailedSagasHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FailedSagasHandler.class);
 
     private final SagaRepository<T> sagaRepository;
 
@@ -80,6 +80,8 @@ public class FailedSagasHandler<T> {
             if (stream.hasNext()) {
                 DomainEventMessage<?> message = stream.next();
 
+                Exception error = null;
+
                 for (String handleMethod : handleMethods) {
                     try {
                         Method method = saga.getClass().getMethod(handleMethod, message.getPayloadType());
@@ -88,10 +90,16 @@ public class FailedSagasHandler<T> {
 
                         sagaWrapper.getAssociationValues().remove(RETRY_ASSOCIATION);
 
+                        error = null;
+
                         break;
                     } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-                        logger.warn("Failed to retry saga {}: ", sagaWrapper.getSagaIdentifier(), e);
+                        error = e;
                     }
+                }
+
+                if (error != null) {
+                    LOG.warn("Failed to retry saga {}: ", sagaWrapper.getSagaIdentifier(), error);
                 }
             }
         }

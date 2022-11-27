@@ -10,6 +10,8 @@ public class UpdateRatingCommand {
     @TargetAggregateIdentifier
     private UUID playerId;
 
+    private UUID gameId;
+
     private Integer ratingDelta;
 
     @TargetAggregateVersion
@@ -18,8 +20,9 @@ public class UpdateRatingCommand {
     public UpdateRatingCommand() {
     }
 
-    public UpdateRatingCommand(final UUID playerId, final Integer ratingDelta, final Long version) {
+    public UpdateRatingCommand(final UUID playerId, final UUID gameId, final Integer ratingDelta, final Long version) {
         this.playerId = playerId;
+        this.gameId = gameId;
         this.ratingDelta = ratingDelta;
         this.version = version;
     }
@@ -46,5 +49,13 @@ public class UpdateRatingCommand {
 
     public void setVersion(final Long version) {
         this.version = version;
+    }
+
+    public UUID getGameId() {
+        return gameId;
+    }
+
+    public void setGameId(final UUID gameId) {
+        this.gameId = gameId;
     }
 }

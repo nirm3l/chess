@@ -26,7 +26,7 @@ import java.util.UUID;
 @Saga
 public class QuickPairGameSaga {
 
-    private transient final Logger logger = LoggerFactory.getLogger(QuickPairGameSaga.class);
+    private static final Logger LOG = LoggerFactory.getLogger(QuickPairGameSaga.class);
 
     public static final String REQUEST_ID_ASSOCIATION = "requestId";
 
@@ -65,7 +65,7 @@ public class QuickPairGameSaga {
                     .switchIfEmpty(Mono.error(new NoGameAvailableException()))
                     .retryWhen(Retry.fixedDelay(60, Duration.ofSeconds(1)))
                     .onErrorResume(e -> {
-                        logger.warn("Cancelling pair player with game request", e);
+                        LOG.warn("Cancelling pair player with game request", e);
 
                         return Mono.empty();
                     })

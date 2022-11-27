@@ -6,6 +6,8 @@ public class PlayerRatingUpdatedEvent {
 
     private UUID playerId;
 
+    private UUID gameId;
+
     private Integer ratingDelta;
 
     private Long version;
@@ -14,10 +16,12 @@ public class PlayerRatingUpdatedEvent {
 
     public PlayerRatingUpdatedEvent() { }
 
-    public PlayerRatingUpdatedEvent(final UUID playerId, final Integer ratingDelta, final Long version) {
+    public PlayerRatingUpdatedEvent(final UUID playerId, final UUID gameId, final Integer ratingDelta, final Long version, final boolean reverted) {
         this.playerId = playerId;
+        this.gameId = gameId;
         this.ratingDelta = ratingDelta;
         this.version = version;
+        this.reverted = reverted;
     }
 
     public UUID getPlayerId() {
@@ -50,5 +54,13 @@ public class PlayerRatingUpdatedEvent {
 
     public void setReverted(final boolean reverted) {
         this.reverted = reverted;
+    }
+
+    public UUID getGameId() {
+        return gameId;
+    }
+
+    public void setGameId(final UUID gameId) {
+        this.gameId = gameId;
     }
 }

@@ -9,13 +9,16 @@ public class RevertRatingCommand {
     @TargetAggregateIdentifier
     private UUID playerId;
 
+    private UUID gameId;
+
     private Integer ratingDelta;
 
     public RevertRatingCommand() {
     }
 
-    public RevertRatingCommand(final UUID playerId, final Integer ratingDelta) {
+    public RevertRatingCommand(final UUID playerId, final UUID gameId, final Integer ratingDelta) {
         this.playerId = playerId;
+        this.gameId = gameId;
         this.ratingDelta = ratingDelta;
     }
 
@@ -33,5 +36,13 @@ public class RevertRatingCommand {
 
     public void setRatingDelta(final Integer ratingDelta) {
         this.ratingDelta = ratingDelta;
+    }
+
+    public UUID getGameId() {
+        return gameId;
+    }
+
+    public void setGameId(final UUID gameId) {
+        this.gameId = gameId;
     }
 }
