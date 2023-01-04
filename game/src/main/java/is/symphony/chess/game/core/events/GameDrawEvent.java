@@ -6,23 +6,15 @@ import java.util.UUID;
 
 public class GameDrawEvent {
 
-    private UUID gameId;
+    private UUID boardId;
 
     private PlayerColor playerColor;
 
     public GameDrawEvent() { }
 
-    public GameDrawEvent(final UUID gameId, final PlayerColor playerColor) {
-        this.gameId = gameId;
+    public GameDrawEvent(final UUID boardId, final PlayerColor playerColor) {
+        this.boardId = boardId;
         this.playerColor = playerColor;
-    }
-
-    public UUID getGameId() {
-        return gameId;
-    }
-
-    public void setGameId(final UUID gameId) {
-        this.gameId = gameId;
     }
 
     public PlayerColor getPlayerColor() {
@@ -31,5 +23,13 @@ public class GameDrawEvent {
 
     public void setPlayerColor(final PlayerColor playerColor) {
         this.playerColor = playerColor;
+    }
+
+    public UUID getBoardId() {
+        return boardId;
+    }
+
+    public void setBoardId(final UUID boardId) {
+        this.boardId = boardId;
     }
 }

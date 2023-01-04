@@ -8,14 +8,17 @@ public class GameResignedEvent {
 
     private UUID gameId;
 
+    private UUID boardId;
+
     private String result;
 
     private PlayerColor playerColor;
 
     public GameResignedEvent() { }
 
-    public GameResignedEvent(final UUID gameId, final String result, final PlayerColor playerColor) {
+    public GameResignedEvent(final UUID gameId, final UUID boardId, final String result, final PlayerColor playerColor) {
         this.gameId = gameId;
+        this.boardId = boardId;
         this.result = result;
         this.playerColor = playerColor;
     }
@@ -42,5 +45,13 @@ public class GameResignedEvent {
 
     public void setPlayerColor(final PlayerColor playerColor) {
         this.playerColor = playerColor;
+    }
+
+    public UUID getBoardId() {
+        return boardId;
+    }
+
+    public void setBoardId(final UUID boardId) {
+        this.boardId = boardId;
     }
 }

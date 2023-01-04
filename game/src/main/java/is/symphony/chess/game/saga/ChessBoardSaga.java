@@ -1,8 +1,6 @@
 package is.symphony.chess.game.saga;
 
 import is.symphony.chess.board.core.commands.CreateBoardCommand;
-import is.symphony.chess.board.core.commands.DrawBoardGameCommand;
-import is.symphony.chess.board.core.commands.FinishBoardGameCommand;
 import is.symphony.chess.board.core.commands.PlayMoveCommand;
 import is.symphony.chess.board.core.events.BoardCanceledEvent;
 import is.symphony.chess.board.core.events.BoardGameFinishedEvent;
@@ -185,18 +183,6 @@ public class ChessBoardSaga {
     @SagaEventHandler(associationProperty = BOARD_ID_ASSOCIATION)
     public void handle(BoardCanceledEvent boardCanceledEvent) {
         commandGateway.send(new CancelGameCommand(gameId));
-    }
-
-    @SagaEventHandler(associationProperty = GAME_ID_ASSOCIATION)
-    public void handle(GameResignedEvent gameResignedEvent) {
-        commandGateway.send(new FinishBoardGameCommand(
-                boardId, PlayerColor.valueOf(gameResignedEvent.getPlayerColor().toString())));
-    }
-
-    @SagaEventHandler(associationProperty = GAME_ID_ASSOCIATION)
-    public void handle(GameDrawEvent gameDrawEvent) {
-        commandGateway.send(new DrawBoardGameCommand(
-                boardId, PlayerColor.valueOf(gameDrawEvent.getPlayerColor().toString())));
     }
 
     @SagaEventHandler(associationProperty = GAME_ID_ASSOCIATION)

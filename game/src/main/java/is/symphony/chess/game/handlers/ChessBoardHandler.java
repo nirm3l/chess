@@ -1,7 +1,11 @@
 package is.symphony.chess.game.handlers;
 
+import is.symphony.chess.board.core.commands.DrawBoardGameCommand;
+import is.symphony.chess.board.core.commands.FinishBoardGameCommand;
 import is.symphony.chess.board.core.commands.PlayMoveCommand;
 import is.symphony.chess.board.core.models.PlayerColor;
+import is.symphony.chess.game.core.events.GameDrawEvent;
+import is.symphony.chess.game.core.events.GameResignedEvent;
 import is.symphony.chess.game.core.events.PlayerMovedEvent;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.ProcessingGroup;
@@ -24,5 +28,17 @@ public class ChessBoardHandler {
                 new PlayMoveCommand(playerMovedEvent.getBoardId(),
                         PlayerColor.valueOf(playerMovedEvent.getPlayerColor().toString()),
                         playerMovedEvent.getMove()));
+    }
+
+    @EventHandler
+    public void handle(GameDrawEvent gameDrawEvent) {
+        commandGateway.send(new DrawBoardGameCommand(
+                gameDrawEvent.getBoardId(), PlayerColor.valueOf(gameDrawEvent.getPlayerColor().toString())));
+    }
+
+    @EventHandler
+    public void handle(GameResignedEvent gameResignedEvent) {
+        commandGateway.send(new FinishBoardGameCommand(
+                gameResignedEvent.getBoardId(), PlayerColor.valueOf(gameResignedEvent.getPlayerColor().toString())));
     }
 }

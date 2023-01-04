@@ -125,11 +125,11 @@ public class GameAggregate {
 
         if (whitePlayerId.equals(command.getPlayerId())) {
             AggregateLifecycle.apply(new GameResignedEvent(
-                    command.getGameId(), "0-1", PlayerColor.BLACK));
+                    command.getGameId(), boardId, "0-1", PlayerColor.BLACK));
         }
         else if (blackPlayerId.equals(command.getPlayerId())) {
             AggregateLifecycle.apply(new GameResignedEvent(
-                    command.getGameId(), "1-0", PlayerColor.WHITE));
+                    command.getGameId(), boardId, "1-0", PlayerColor.WHITE));
         }
         else {
             throw new ItsNotYourGameException();
@@ -143,10 +143,10 @@ public class GameAggregate {
         }
 
         if (command.getPlayerId().equals(whitePlayerId)) {
-            AggregateLifecycle.apply(new GameDrawEvent(gameId, PlayerColor.WHITE));
+            AggregateLifecycle.apply(new GameDrawEvent(boardId, PlayerColor.WHITE));
         }
         else if (command.getPlayerId().equals(blackPlayerId)) {
-            AggregateLifecycle.apply(new GameDrawEvent(gameId, PlayerColor.BLACK));
+            AggregateLifecycle.apply(new GameDrawEvent(boardId, PlayerColor.BLACK));
         }
         else {
             throw new ItsNotYourGameException();
