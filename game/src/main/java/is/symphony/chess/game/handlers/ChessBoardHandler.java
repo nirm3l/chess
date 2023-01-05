@@ -3,10 +3,12 @@ package is.symphony.chess.game.handlers;
 import is.symphony.chess.board.core.commands.DrawBoardGameCommand;
 import is.symphony.chess.board.core.commands.FinishBoardGameCommand;
 import is.symphony.chess.board.core.commands.PlayMoveCommand;
+import is.symphony.chess.board.core.commands.TakeBackCommand;
 import is.symphony.chess.board.core.models.PlayerColor;
 import is.symphony.chess.game.core.events.GameDrawEvent;
 import is.symphony.chess.game.core.events.GameResignedEvent;
 import is.symphony.chess.game.core.events.PlayerMovedEvent;
+import is.symphony.chess.game.core.events.TakeBackEvent;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
@@ -34,6 +36,12 @@ public class ChessBoardHandler {
     public void handle(GameDrawEvent gameDrawEvent) {
         commandGateway.send(new DrawBoardGameCommand(
                 gameDrawEvent.getBoardId(), PlayerColor.valueOf(gameDrawEvent.getPlayerColor().toString())));
+    }
+
+    @EventHandler
+    public void handle(TakeBackEvent takeBackEvent) {
+        commandGateway.send(new TakeBackCommand(
+                takeBackEvent.getBoardId(), PlayerColor.valueOf(takeBackEvent.getPlayerColor().toString())));
     }
 
     @EventHandler

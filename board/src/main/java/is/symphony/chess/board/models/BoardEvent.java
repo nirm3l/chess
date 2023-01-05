@@ -11,6 +11,10 @@ public class BoardEvent {
 
     private PlayerColor drawOffer;
 
+    private PlayerColor takeBackOffer;
+
+    private boolean takeBackAccepted;
+
     private String result;
 
     public BoardEvent() {
@@ -46,5 +50,21 @@ public class BoardEvent {
 
     public void setResult(final String result) {
         this.result = result;
+    }
+
+    public PlayerColor getTakeBackOffer() {
+        return takeBackOffer;
+    }
+
+    public void setTakeBackOffer(final PlayerColor takeBackOffer) {
+        this.takeBackOffer = takeBackOffer;
+    }
+
+    public boolean isTakeBackAccepted() {
+        return takeBackAccepted;
+    }
+
+    public void setTakeBackAccepted(final boolean takeBackAccepted) {
+        this.takeBackAccepted = takeBackAccepted;
     }
 }

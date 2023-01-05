@@ -13,7 +13,6 @@ import is.symphony.chess.board.core.models.BoardMove;
 import is.symphony.chess.board.core.models.PlayerColor;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
-import org.axonframework.eventsourcing.conflictresolution.ConflictResolution;
 import org.axonframework.eventsourcing.conflictresolution.ConflictResolver;
 import org.axonframework.messaging.interceptors.ExceptionHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
@@ -23,6 +22,7 @@ import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,7 +35,7 @@ public class ChessBoardAggregate {
     @AggregateIdentifier
     private UUID boardId;
 
-    private List<BoardMove> moves;
+    private LinkedList<BoardMove> moves;
 
     private Integer incrementSeconds = 0;
 
@@ -53,6 +53,8 @@ public class ChessBoardAggregate {
 
     private PlayerColor drawOffer;
 
+    private PlayerColor takeBackOffer;
+
     protected ChessBoardAggregate() { }
 
     @CommandHandler
@@ -62,12 +64,7 @@ public class ChessBoardAggregate {
 
     @CommandHandler
     public void handle(PlayMoveCommand command, ConflictResolver conflictResolver) {
-        conflictResolver.detectConflicts(messages -> {
-            return true;
-        }, description -> {
-            return new RuntimeException();
-        });
-        
+        conflictResolver.detectConflicts(messages -> true, description -> new RuntimeException());
 
         if (result != null) {
             throw new IllegalMoveException();
@@ -130,12 +127,31 @@ public class ChessBoardAggregate {
 
     @CommandHandler
     public void handle(DrawBoardGameCommand command) {
+        if (result != null) {
+            throw new IllegalMoveException();
+        }
+
         if (drawOffer == null) {
             AggregateLifecycle.apply(
                     new DrawOfferedEvent(command.getBoardId(), command.getPlayerColor()));
         }
         else if (drawOffer != command.getPlayerColor()) {
             AggregateLifecycle.apply(new BoardGameFinishedEvent(boardId, "1/2-1/2", false));
+        }
+    }
+
+    @CommandHandler
+    public void handle(TakeBackCommand command) {
+        if (result != null) {
+            throw new IllegalMoveException();
+        }
+
+        if (takeBackOffer == null) {
+            AggregateLifecycle.apply(
+                    new TakeBackProposedEvent(command.getBoardId(), command.getPlayerColor()));
+        }
+        else if (takeBackOffer != command.getPlayerColor()) {
+            AggregateLifecycle.apply(new TakeBackAcceptedEvent(boardId));
         }
     }
 
@@ -164,10 +180,7 @@ public class ChessBoardAggregate {
 
     private void addSanMove(MoveList moveList, String move, PlayerColor playerColor) {
         try {
-            Move moveInstance = new Move(move, playerColor == PlayerColor.WHITE ? Side.WHITE : Side.BLACK);
-            // TODO: Promotion?
-
-            moveList.add(moveInstance);
+            moveList.add(new Move(move, playerColor == PlayerColor.WHITE ? Side.WHITE : Side.BLACK));
         }
         catch (Exception e) {
             moveList.addSanMove(playerColor == PlayerColor.WHITE ? move.toUpperCase() : move, true, true);
@@ -216,7 +229,7 @@ public class ChessBoardAggregate {
     @EventSourcingHandler
     public void on(BoardCreatedEvent event) {
         boardId = event.getBoardId();
-        moves = new ArrayList<>();
+        moves = new LinkedList<>();
         incrementSeconds = event.getIncrementSeconds();
         minutes = event.getMinutes();
     }
@@ -231,6 +244,7 @@ public class ChessBoardAggregate {
         state = event.getBoardState();
         san = event.getBoardSan();
         drawOffer = null;
+        takeBackOffer = null;
 
         BoardGameResult result = getBoardGameResult(getBoard());
 
@@ -254,6 +268,17 @@ public class ChessBoardAggregate {
     @EventSourcingHandler
     public void on(DrawOfferedEvent event) {
         drawOffer = event.getPlayerColor();
+    }
+
+    @EventSourcingHandler
+    public void on(TakeBackProposedEvent event) {
+        takeBackOffer = event.getPlayerColor();
+    }
+
+    @EventSourcingHandler
+    public void on(TakeBackAcceptedEvent event) {
+        takeBackOffer = null;
+        moves.removeLast();
     }
 
     private BoardGameResult getBoardGameResult(Board board) {
