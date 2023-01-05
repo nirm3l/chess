@@ -86,42 +86,6 @@ public class BoardsEventHandler {
                 }).block();
     }
 
-    @EventHandler
-    public void on(TakeBackProposedEvent event) {
-        boardRepository.findById(event.getBoardId())
-                .flatMap(board -> {
-                    BoardMove lastMove = getLastMove(board);
-
-                    if (lastMove != null) {
-                        lastMove.setTakeBackOffer(event.getPlayerColor());
-                    }
-
-                    BoardEvent boardEvent = new BoardEvent();
-                    boardEvent.setTakeBackOffer(event.getPlayerColor());
-
-                    emitter.emit(LiveUpdatesQuery.class, q -> event.getBoardId()
-                            .equals(q.getBoardId()), boardEvent);
-
-                    return boardRepository.save(board);
-                }).block();
-    }
-
-    @EventHandler
-    public void on(TakeBackAcceptedEvent event) {
-        boardRepository.findById(event.getBoardId())
-                .flatMap(board -> {
-                    board.getMoves().remove(board.getMoves().size() - 1);
-
-                    BoardEvent boardEvent = new BoardEvent();
-                    boardEvent.setTakeBackAccepted(true);
-
-                    emitter.emit(LiveUpdatesQuery.class, q -> event.getBoardId()
-                            .equals(q.getBoardId()), boardEvent);
-
-                    return boardRepository.save(board);
-                }).block();
-    }
-
     private BoardMove getLastMove(Board board) {
         return board.getMoves().size() > 0 ?
                 board.getMoves().get(board.getMoves().size() - 1) : null;

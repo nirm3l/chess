@@ -78,9 +78,6 @@ public class BoardsController {
                                     else if (boardEvent.getResult() != null) {
                                         return createServerSentEvent("result", boardEvent.getResult());
                                     }
-                                    else if (boardEvent.isTakeBackAccepted()) {
-                                        return createServerSentEvent("take-back", true);
-                                    }
 
                                     return null;
                                 }))));

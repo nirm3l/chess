@@ -18,8 +18,6 @@ public class BoardMove {
 
     private PlayerColor drawOffer;
 
-    private PlayerColor takeBackOffer;
-
     public BoardMove() { }
 
     public BoardMove(final String move, final String state, final Long timestamp, final PlayerColor playerColor) {
@@ -91,13 +89,5 @@ public class BoardMove {
 
     public void setDrawOffer(final PlayerColor drawOffer) {
         this.drawOffer = drawOffer;
-    }
-
-    public PlayerColor getTakeBackOffer() {
-        return takeBackOffer;
-    }
-
-    public void setTakeBackOffer(final PlayerColor takeBackOffer) {
-        this.takeBackOffer = takeBackOffer;
     }
 }

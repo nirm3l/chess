@@ -85,12 +85,6 @@ public class GamesController {
         return reactiveCommandGateway.send(new DrawGameCommand(gameId, userId)).then();
     }
 
-    @PostMapping(value = "/{gameId}/takeback")
-    public Mono<Void> takeback(
-            @PathVariable final UUID gameId, @RequestHeader("User") UUID userId) {
-        return reactiveCommandGateway.send(new TakeBackCommand(gameId, userId)).then();
-    }
-
     @GetMapping(value = "/{gameId}/live-updates", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<?>> streamBoardMoves(@PathVariable final UUID gameId) {
         return Flux.merge(

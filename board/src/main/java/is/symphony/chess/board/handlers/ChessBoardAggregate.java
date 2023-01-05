@@ -53,8 +53,6 @@ public class ChessBoardAggregate {
 
     private PlayerColor drawOffer;
 
-    private PlayerColor takeBackOffer;
-
     protected ChessBoardAggregate() { }
 
     @CommandHandler
@@ -137,21 +135,6 @@ public class ChessBoardAggregate {
         }
         else if (drawOffer != command.getPlayerColor()) {
             AggregateLifecycle.apply(new BoardGameFinishedEvent(boardId, "1/2-1/2", false));
-        }
-    }
-
-    @CommandHandler
-    public void handle(TakeBackCommand command) {
-        if (result != null) {
-            throw new IllegalMoveException();
-        }
-
-        if (takeBackOffer == null) {
-            AggregateLifecycle.apply(
-                    new TakeBackProposedEvent(command.getBoardId(), command.getPlayerColor()));
-        }
-        else if (takeBackOffer != command.getPlayerColor()) {
-            AggregateLifecycle.apply(new TakeBackAcceptedEvent(boardId));
         }
     }
 
@@ -244,7 +227,6 @@ public class ChessBoardAggregate {
         state = event.getBoardState();
         san = event.getBoardSan();
         drawOffer = null;
-        takeBackOffer = null;
 
         BoardGameResult result = getBoardGameResult(getBoard());
 
@@ -268,25 +250,6 @@ public class ChessBoardAggregate {
     @EventSourcingHandler
     public void on(DrawOfferedEvent event) {
         drawOffer = event.getPlayerColor();
-    }
-
-    @EventSourcingHandler
-    public void on(TakeBackProposedEvent event) {
-        takeBackOffer = event.getPlayerColor();
-    }
-
-    @EventSourcingHandler
-    public void on(TakeBackAcceptedEvent event) {
-        takeBackOffer = null;
-        moves.removeLast();
-
-        getBoard().undoMove();
-        state = getBoard().getFen();
-
-        final MoveList moveList = new MoveList();
-        moveList.loadFromSan(san);
-        moveList.removeLast();
-        san = moveList.toSanWithMoveNumbers();
     }
 
     private BoardGameResult getBoardGameResult(Board board) {

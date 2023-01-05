@@ -154,23 +154,6 @@ public class GameAggregate {
     }
 
     @CommandHandler
-    public void handle(TakeBackCommand command) {
-        if (boardId == null) {
-            throw new BoardIsNotReadyException();
-        }
-
-        if (command.getPlayerId().equals(whitePlayerId)) {
-            AggregateLifecycle.apply(new TakeBackEvent(boardId, PlayerColor.WHITE));
-        }
-        else if (command.getPlayerId().equals(blackPlayerId)) {
-            AggregateLifecycle.apply(new TakeBackEvent(boardId, PlayerColor.BLACK));
-        }
-        else {
-            throw new ItsNotYourGameException();
-        }
-    }
-
-    @CommandHandler
     public void handle(CancelGameCommand command) {
         if (gameCanceled) {
             throw new GameIsCanceledException();
