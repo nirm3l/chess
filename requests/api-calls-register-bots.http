@@ -4,7 +4,9 @@ POST http://localhost:8080/players
 Content-Type: application/json
 
 {
-  "name": "Carlsen"
+  "name": "white-knight",
+  "bot": true,
+  "level": 5
 }
 
 > {%
@@ -17,7 +19,9 @@ POST http://localhost:8080/players
 Content-Type: application/json
 
 {
-  "name": "Nakamura"
+  "name": "black-knight",
+  "bot": true,
+  "level": 20
 }
 
 > {%

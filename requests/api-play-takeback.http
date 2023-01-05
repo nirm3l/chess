@@ -1,0 +1,11 @@
+### Takeback proposal
+
+POST http://localhost:8080/games/{{game_id}}/takeback
+Content-Type: application/json
+User: {{player1}}
+
+### Accept takeback
+
+POST http://localhost:8080/games/{{game_id}}/takeback
+Content-Type: application/json
+User: {{player2}}

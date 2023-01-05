@@ -279,6 +279,14 @@ public class ChessBoardAggregate {
     public void on(TakeBackAcceptedEvent event) {
         takeBackOffer = null;
         moves.removeLast();
+
+        getBoard().undoMove();
+        state = getBoard().getFen();
+
+        final MoveList moveList = new MoveList();
+        moveList.loadFromSan(san);
+        moveList.removeLast();
+        san = moveList.toSanWithMoveNumbers();
     }
 
     private BoardGameResult getBoardGameResult(Board board) {
