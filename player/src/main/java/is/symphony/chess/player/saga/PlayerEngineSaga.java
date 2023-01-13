@@ -46,7 +46,7 @@ public class PlayerEngineSaga {
             SagaLifecycle.associateWith(ENGINE_ID_ASSOCIATION, engineId.toString());
         }
 
-        commandGateway.send(new RegisterEngineCommand(
+        commandGateway.sendAndWait(new RegisterEngineCommand(
                 engineId, playerRegisteredEvent.getName(), playerRegisteredEvent.getLevel()));
     }
 

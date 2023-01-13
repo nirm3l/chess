@@ -268,12 +268,12 @@ public class ChessBoardSaga {
             LOG.info("Game {} success update rating for player {}.", gameId, event.getPlayerId());
 
             if (playerRatingUpdatedDeltas.size() == 2) {
-                if (playerRatingUpdatedDeltas.get(getOppositePlayerId(event.getPlayerId())) != 0)
+                if (playerRatingUpdatedDeltas.get(getOppositePlayerId(event.getPlayerId())) != 0) {
                     SagaLifecycle.end();
-                }
-                else {
+                } else {
                     retryUpdatePlayerRatings();
                 }
+            }
         }
         else {
             LOG.info("Game {} reverted update rating for player {}.", gameId, event.getPlayerId());
