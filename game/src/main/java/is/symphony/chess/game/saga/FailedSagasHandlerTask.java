@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class FailedSagasHandlerTask {
 
-    private final FailedSagasHandler<ChessBoardSaga> failedSagasHandler;
+    private final FailedSagasHandler<GameSaga> failedSagasHandler;
 
     private final CommandGateway commandGateway;
 
@@ -18,7 +18,7 @@ public class FailedSagasHandlerTask {
 
     private final EventScheduler eventScheduler;
 
-    public FailedSagasHandlerTask(final FailedSagasHandler<ChessBoardSaga> failedSagasHandler,
+    public FailedSagasHandlerTask(final FailedSagasHandler<GameSaga> failedSagasHandler,
                                   final CommandGateway commandGateway, final QueryGateway queryGateway,
                                   final EventScheduler eventScheduler) {
         this.failedSagasHandler = failedSagasHandler;

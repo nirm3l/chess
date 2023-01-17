@@ -1,7 +1,7 @@
 package is.symphony.chess.configuration;
 
 import is.symphony.chess.FailedSagasHandler;
-import is.symphony.chess.game.saga.ChessBoardSaga;
+import is.symphony.chess.game.saga.GameSaga;
 import org.axonframework.config.ConfigurerModule;
 import org.axonframework.eventhandling.GenericDomainEventMessage;
 import org.axonframework.eventsourcing.eventstore.EventStore;
@@ -18,10 +18,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class AxonFrameworkConfiguration {
 
     @Bean
-    public SagaRepository<ChessBoardSaga> mySagaRepository(SagaStore sagaStore) {
+    public SagaRepository<GameSaga> mySagaRepository(SagaStore sagaStore) {
         return AnnotatedSagaRepository.builder()
                 .sagaStore(sagaStore)
-                .sagaType(ChessBoardSaga.class)
+                .sagaType(GameSaga.class)
                 .build();
     }
 
@@ -45,8 +45,8 @@ public class AxonFrameworkConfiguration {
     }
 
     @Bean
-    public FailedSagasHandler<ChessBoardSaga> failedSagasHandler(
-            final SagaRepository<ChessBoardSaga> sagaRepository, final EventStore eventStore) {
+    public FailedSagasHandler<GameSaga> failedSagasHandler(
+            final SagaRepository<GameSaga> sagaRepository, final EventStore eventStore) {
         return new FailedSagasHandler<>(sagaRepository, eventStore, "handle", "handleWhitePlayer", "handleBlackPlayer");
     }
 }

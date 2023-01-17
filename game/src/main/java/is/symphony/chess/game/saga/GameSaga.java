@@ -40,9 +40,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 @Saga
-public class ChessBoardSaga {
+public class GameSaga {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ChessBoardSaga.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GameSaga.class);
 
     public static final String GAME_ID_ASSOCIATION = "gameId";
 
